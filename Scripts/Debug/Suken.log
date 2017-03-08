@@ -1,9 +1,9 @@
-﻿2017/03/08 18:46:44 にビルドを開始しました。
+﻿2017/03/08 19:03:59 にビルドを開始しました。
      1>ノード 2 上のプロジェクト "C:\Users\ykawachi\Desktop\Chikuwa3rd\Scripts\Suken.vcxproj" (Build ターゲット)。
      1>C:\Program Files (x86)\MSBuild\12.0\bin\Microsoft.Common.CurrentVersion.targets(1492,5): warning : The referenced project 'stage\stage.vcxproj' does not exist.
      1>ClCompile:
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\プロジェクトに追加すべきファイル_VC用" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt Tile.cpp
-         Tile.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\プロジェクトに追加すべきファイル_VC用" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt TileM.cpp
+         TileM.cpp
      1>c:\users\ykawachi\desktop\chikuwa3rd\scripts\sukenlib\utility\data.h(31): warning C4018: '>=' : signed と unsigned の数値を比較しようとしました。
      1>c:\users\ykawachi\desktop\chikuwa3rd\scripts\sukenlib\utility\data.h(42): warning C4018: '>=' : signed と unsigned の数値を比較しようとしました。
      1>c:\users\ykawachi\desktop\chikuwa3rd\scripts\sukenlib\utility\data.h(74): warning C4018: '>=' : signed と unsigned の数値を比較しようとしました。
@@ -45,4 +45,4 @@
 
 ビルドに成功しました。
 
-経過時間 00:00:02.89
+経過時間 00:00:03.44

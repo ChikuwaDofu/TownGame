@@ -34,9 +34,7 @@ void CTileManager::CheckInfo(){
 		if (fbox->GetClose()){
 			delete fbox;
 			info = false;
-		}
-
-		if (fbox->GetSelect()){
+		}else if (fbox->GetSelect()){
 			tile[infoNum].SetTown(fbox->GetTType());
 			delete fbox;
 			info = false;
