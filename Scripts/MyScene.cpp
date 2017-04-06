@@ -1,6 +1,6 @@
 #include"MyScene.h"
 #include"TileM.h"
-#include"Tile.h"
+//#include"Tile.h"
 
 CTileManager tileM;
 
@@ -9,7 +9,7 @@ void SetClass(){
 }
 
 void LoadHandle(){
-	CTile::LoadGraph();
+	//CTile::LoadGraph();
 }
 
 void DrawGame(){

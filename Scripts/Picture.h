@@ -1,6 +1,6 @@
 #pragma once
 
-#include"Suken.h"
+#include "Suken.h"
 
 class CPicture{
 private:

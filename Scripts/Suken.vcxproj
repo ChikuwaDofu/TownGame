@@ -109,12 +109,10 @@
     <ClCompile Include="SukenLib\Utility\MCE.cpp" />
     <ClCompile Include="SukenLib\Utility\Utility.cpp" />
     <ClCompile Include="SukenLib\Windows\Midi.cpp" />
-    <ClCompile Include="Tile.cpp" />
     <ClCompile Include="TileM.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="InfoBox.h" />
     <ClInclude Include="MyScene.h" />
     <ClInclude Include="Picture.h" />
     <ClInclude Include="Suken.h" />
@@ -140,7 +138,6 @@
     <ClInclude Include="SukenLib\Utility\MCE.h" />
     <ClInclude Include="SukenLib\Utility\Utility.h" />
     <ClInclude Include="SukenLib\Windows\Midi.h" />
-    <ClInclude Include="Tile.h" />
     <ClInclude Include="TileM.h" />
   </ItemGroup>
   <ItemGroup>

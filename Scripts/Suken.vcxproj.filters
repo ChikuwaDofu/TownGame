@@ -109,9 +109,6 @@
     <ClCompile Include="Picture.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Tile.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
     <ClCompile Include="TileM.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -195,13 +192,7 @@
     <ClInclude Include="Picture.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Tile.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
     <ClInclude Include="TileM.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="InfoBox.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>
