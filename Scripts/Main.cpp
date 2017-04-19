@@ -3,7 +3,6 @@
 
 void suken::Awake(){
 	SetClass();
-	LoadHandle();
 }
 
 void suken::GameLoopEnter(){
