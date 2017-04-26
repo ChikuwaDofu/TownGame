@@ -7,8 +7,9 @@ const int BLOCKS_X = 10;
 const int BLOCKS_Y = 10;
 const int CROSS_L = 40;
 const int GRID = 60;
-const int TOWNS = 2;
-const int TLVS = 6;
+const int TOWNS = 1;
+const int TLVS = 3;
+const int BUILDINGS = 3;
 const int RESOURCES = 2;
 
 enum ETerrain{
@@ -35,11 +36,14 @@ struct STownData{
 };
 
 struct STile{
+	STile();
+
 	int x;
 	int y;
 	ETerrain terrain;
 	ETown town;
 	int townLv;
+	bool built[BUILDINGS];
 };
 
 struct STown{
@@ -59,7 +63,10 @@ struct SInfoBox{
 	static CPicture g_town;
 	static CPicture g_building;
 	static CPicture g_box;
+	static CPicture g_shade;
 	static CPicture g_resource;
+	static CPicture g_build;
+	static CPicture g_demolish;
 	FILE* f_tData;
 	STownData tData;
 
@@ -77,10 +84,15 @@ struct STownBox :public SInfoBox{
 	STownBox(ETerrain type);
 	bool remove;
 	bool develop;
+	bool build;
+	bool demolish;
 	int devLv;
+	int buildNum;
 	void PutRemoveButton(int x, int y);
 	void PutDevButton(int x, int y, int lv);
-	void DrawTB(ETown town, int lv, int money);
+	void PutBuildButton(int x, int y, int bNum);
+	void PutDemolishButton(int x, int y, int bNum);
+	void DrawTB(STile town, int money);
 };
 
 class CTileManager{

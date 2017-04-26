@@ -6,6 +6,12 @@ CPicture CTileManager::g_frame;
 CPicture CTileManager::g_resource;
 CPicture CTileManager::g_num;
 
+STile::STile(){
+	for (int i = 0; i < 3; i++){
+		built[i] = false;
+	}
+}
+
 void CTileManager::Set(){
 	for(int y=0; y<BLOCKS_Y; y++){
 		for(int x=0; x<BLOCKS_X; x++){
@@ -98,6 +104,16 @@ void CTileManager::CloseInfo(){
 			delete tbox;
 			boxStatus = NO;
 		}
+		else if (tbox->build){
+			tile[infoNum].built[tbox->buildNum] = true;
+			delete tbox;
+			boxStatus = NO;
+		}
+		else if (tbox->demolish){
+			tile[infoNum].built[tbox->buildNum] = false;
+			delete tbox;
+			boxStatus = NO;
+		}
 
 		break;
 
@@ -161,7 +177,7 @@ void CTileManager::Draw(){
 
 	case TOWN :
 
-		tbox->DrawTB(tile[infoNum].town, tile[infoNum].townLv, town.money);
+		tbox->DrawTB(tile[infoNum], town.money);
 
 	default:
 		break;
