@@ -28,11 +28,22 @@ enum EInfo{
 	NO, FOUND, TOWN
 };
 
+enum EMode{
+	KEEP, CLOSE, EST, REMV, DEV, BUILD, DEMO
+};
+
 struct STownData{
-	int income_m[TOWNS][TLVS];
-	int cost_m[TOWNS][TLVS];
-	int income_f[TOWNS][TLVS];
-	int cost_f[TOWNS][TLVS];
+	STownData();
+
+	int income[TOWNS][TLVS][RESOURCES];
+	int cost[TOWNS][TLVS][RESOURCES];
+};
+
+struct SBuildingData{
+	SBuildingData();
+
+	int income[TOWNS][TLVS][RESOURCES];
+	int cost[TOWNS][TLVS][RESOURCES];
 };
 
 struct STile{
@@ -44,6 +55,8 @@ struct STile{
 	ETown town;
 	int townLv;
 	bool built[BUILDINGS];
+
+	int produce[RESOURCES];
 };
 
 struct STown{
@@ -55,9 +68,8 @@ struct STown{
 
 struct SInfoBox{
 	SInfoBox();
-	bool close;
-	bool select;
 	bool open;
+	EMode mode;
 	ETerrain terrain;
 	static CPicture g_tile;
 	static CPicture g_town;
@@ -67,8 +79,8 @@ struct SInfoBox{
 	static CPicture g_resource;
 	static CPicture g_build;
 	static CPicture g_demolish;
-	FILE* f_tData;
 	STownData tData;
+	SBuildingData bData;
 
 	void DrawIB();
 };
@@ -82,10 +94,6 @@ struct SFoundBox :public SInfoBox{
 
 struct STownBox :public SInfoBox{
 	STownBox(ETerrain type);
-	bool remove;
-	bool develop;
-	bool build;
-	bool demolish;
 	int devLv;
 	int buildNum;
 	void PutRemoveButton(int x, int y);
@@ -103,9 +111,8 @@ private:
 	static CPicture g_resource;
 	static CPicture g_num;
 
-	FILE* f_tData;
-
 	STownData tData;
+	SBuildingData bData;
 	STile tile[100];//0 1
 					//2 3
 	STown town;
