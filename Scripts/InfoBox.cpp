@@ -13,7 +13,7 @@ SInfoBox::SInfoBox(){
 	mode = KEEP;
 	open = true;
 
-	g_tile.Load("Chikuwa3/Tiles.png", 2, 2, GRID, GRID, 4);
+	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", TLVS, TOWNS, GRID, GRID, TLVS*TOWNS);
 	g_building.Load("Chikuwa3/Buildings.png", BUILDINGS, 1, 40, 40, BUILDINGS);
 	g_box.Load("Chikuwa3/Box.png");
@@ -33,14 +33,43 @@ void SInfoBox::DrawIB(){
 
 /////
 
-SFoundBox::SFoundBox(ETerrain type){
+SFoundBox::SFoundBox(ETerrain type, STown town){
 	terrain = type;
+	townInfo = town;
 }
 
-void SFoundBox::PutButton(int x, int y, ETown type){
-	if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
-		town = type;
-		mode = EST;
+bool SFoundBox::CheckEnough(ETown type){
+	for(int i = 0; i < RESOURCES; i++){
+		if (townInfo.resource[i] < tData.cost[type][0][i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void SFoundBox::PutButton(int x, int y, ETown type, int money){
+	g_town.Draw(540, 270, type);
+
+	DrawData(540 + GRID + 5, 270, type);
+
+	if (CheckEnough(type)){
+		DrawFormatString(x + 10, y + GRID + 10, BLACK, "%d", tData.cost[type][0][MONEY]);
+
+		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
+			town = type;
+			mode = EST;
+		}
+	}
+	else{
+		DrawFormatString(x + 10, y + GRID + 10, RED, "%d", tData.cost[type][0][MONEY]);
+	}
+}
+
+void SFoundBox::DrawData(int x, int y, ETown type){
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(x, y + i * (I_SIZE + 5), i);
+		DrawFormatString(x + I_SIZE + 5, y + i * 25, BLACK, "%d", tData.income[type][0][i]);
 	}
 }
 
@@ -49,41 +78,8 @@ void SFoundBox::DrawFB(int money){
 
 	switch (terrain){
 	case 0:
-		g_town.Draw(540, 270, FARM);
-
-		if (money < tData.cost[0][0][MONEY]){
-			DrawFormatString(550, 340, RED, "%d", tData.cost[0][0][MONEY]);
-		}
-		else{
-			if (!open){
-				PutButton(540, 270, FARM);
-			}
-
-			DrawFormatString(550, 340, BLACK, "%d", tData.cost[0][0][MONEY]);
-		}
-
-		g_resource.Draw(605, 270, MONEY);
-		DrawFormatString(630, 270, BLACK, "%d", tData.income[0][0][MONEY]);
-		g_resource.Draw(605, 295, FOOD);
-		DrawFormatString(630, 295, BLACK, "%d", tData.income[0][0][FOOD]);
-
+		PutButton(540, 270, FARM, money);
 		break;
-
-	/*case 1:
-		g_town.Draw(570, 270, 1);
-
-		if (money < tData.cost_m[0][0]){
-			DrawFormatString(580, 340, RED, "%d", tData.cost_m[0][0]);
-		}
-		else{
-			if (!open){
-				PutButton(570, 270, PORT);
-			}
-
-			DrawFormatString(580, 340, BLACK, "%d", tData.cost_m[1][0]);
-		}
-
-		break;*/
 
 	default:
 		break;
@@ -94,9 +90,10 @@ void SFoundBox::DrawFB(int money){
 
 /////
 
-STownBox::STownBox(ETerrain type){
+STownBox::STownBox(STown town, STile tile){
 	devLv = 0;
-	terrain = type;
+	townInfo = town;
+	tileInfo = tile;
 }
 
 void STownBox::PutRemoveButton(int x, int y){
@@ -105,188 +102,146 @@ void STownBox::PutRemoveButton(int x, int y){
 	}
 }
 
-void STownBox::PutDevButton(int x, int y, int lv){
-	if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
-		mode = DEV;
-		devLv = lv;
+void STownBox::DrawDev(int x, int y, int lv){
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(x, y + i * (I_SIZE + 5), i);
+		DrawFormatString(x + I_SIZE + 5, y + i * (I_SIZE + 5), BLACK, "+%d", tData.income[tileInfo.town][lv][i] - tData.income[tileInfo.town][0][i]);
 	}
 }
 
+bool STownBox::CheckDEnough(int lv){
+	for (int i = 0; i < RESOURCES; i++){
+		if (townInfo.resource[i] < tData.cost[tileInfo.town][lv][i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void STownBox::PutDevButton(int x, int y, int lv){
+	if (CheckDEnough(lv)){
+		DrawFormatString(x + 10, y + GRID + 10, BLACK, "%d", tData.cost[tileInfo.town][lv][MONEY]);
+
+		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
+			mode = DEV;
+			devLv = lv;
+		}
+	}
+	else{
+		DrawFormatString(x + 10, y + GRID + 10, RED, "%d", tData.cost[tileInfo.town][lv][MONEY]);
+	}
+}
+
+void STownBox::DrawBuildings(int x, int y, int build){
+	g_building.Draw(x, y, build);
+
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(x + B_SIZE + 5, y - 5 + i * I_SIZE, i);
+		DrawFormatString(x + B_SIZE + I_SIZE + 10, y - 5 + i * I_SIZE, BLACK, "%d", bData.income[tileInfo.town][build][i]);
+	}
+}
+
+bool STownBox::CheckBEnough(int bNum){
+	for (int i = 0; i < RESOURCES; i++){
+		if (townInfo.resource[i] < bData.cost[tileInfo.town][bNum][i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void STownBox::PutBuildButton(int x, int y, int bNum){
-	if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
-		mode = BUILD;
-		buildNum = bNum;
+	g_shade.Draw(x, y);
+
+	if (CheckBEnough(bNum)){
+		if (Event.RMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
+			g_build.Draw(x, y);
+		}
+
+		if (Event.LMouse.GetClick(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
+			mode = BUILD;
+			buildNum = bNum;
+		}
+
+		DrawFormatString(x, y + 45, BLACK, "%d", bData.cost[tileInfo.town][bNum][MONEY]);
+	}
+	else{
+		DrawFormatString(x, y + 45, RED, "%d", bData.cost[tileInfo.town][bNum][MONEY]);
 	}
 }
 
 void STownBox::PutDemolishButton(int x, int y, int bNum){
+	if (Event.RMouse.GetOn(x, y, x + B_SIZE, y + B_SIZE)){
+		g_demolish.Draw(x, y);
+	}
+
 	if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
 		mode = DEMO;
 		buildNum = bNum;
 	}
 }
 
-void STownBox::DrawTB(STile town, int money){
+void STownBox::DrawTB(){
 	DrawIB();
 
-	g_resource.Draw(425, 485, MONEY);
-	DrawFormatString(450, 485, BLACK, "%d", town.produce[MONEY]);
-	g_resource.Draw(425, 505, FOOD);
-	DrawFormatString(450, 505, BLACK, "%d", town.produce[FOOD]);
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(425, 485 + i * I_SIZE, i);
+		DrawFormatString(425 + I_SIZE + 5, 485 + i * I_SIZE, BLACK, "%d", tileInfo.produce[i]);
+	}
 
-	g_building.Draw(430, 60, 0);
-	g_resource.Draw(475, 55, MONEY);
-	DrawFormatString(500, 55, BLACK, "%d", bData.income[town.town][0][MONEY]);
-	g_resource.Draw(475, 80, FOOD);
-	DrawFormatString(500, 80, BLACK, "%d", bData.income[town.town][0][FOOD]);
+	DrawBuildings(430, 60, 0);
 
-	if (town.built[0]){
-		if (Event.RMouse.GetOn(430, 60, 470, 100)){
-			g_demolish.Draw(430, 60);
-		}
-
+	if (tileInfo.built[0]){
 		PutDemolishButton(430, 60, 0);
 	}
 	else{
-		g_shade.Draw(430, 60);
-
-		if (Event.RMouse.GetOn(430, 60, 470, 100)){
-			g_build.Draw(430, 60);
-		}
-
 		PutBuildButton(430, 60, 0);
 	}
 
-	if (town.townLv == 1){
-		g_building.Draw(730, 60, 1);
-		g_resource.Draw(775, 55, MONEY);
-		DrawFormatString(800, 55, BLACK, "%d", bData.income[town.town][1][MONEY]);
-		g_resource.Draw(775, 80, FOOD);
-		DrawFormatString(800, 80, BLACK, "%d", bData.income[town.town][1][FOOD]);
-		if (town.built[1]){
-			if (Event.RMouse.GetOn(730, 60, 770, 100)){
-				g_demolish.Draw(730, 60);
-			}
+	switch (tileInfo.townLv){
+	case 0:
+		g_town.Draw(440, 270, 1 + tileInfo.town*TOWNS);
+		PutDevButton(440, 270, 1);
+		DrawDev(440 + GRID + 5, 270, 1);
 
+		g_town.Draw(640, 270, 2 + tileInfo.town*TOWNS);
+		PutDevButton(640, 270, 2);
+		DrawDev(640 + GRID + 5, 270, 2);
+		break;
+
+	case 1:
+		DrawBuildings(730, 60, 1);
+
+		if (tileInfo.built[1]){
 			PutDemolishButton(730, 60, 1);
 		}
 		else{
-			g_shade.Draw(730, 60);
-			if (Event.RMouse.GetOn(730, 60, 770, 100)){
-				g_build.Draw(730, 60);
-			}
-
 			PutBuildButton(730, 60, 1);
 		}
-	}
+		break;
 
-	if (town.townLv == 2){
-		g_building.Draw(730, 60, 2);
-		g_resource.Draw(775, 55, MONEY);
-		DrawFormatString(800, 55, BLACK, "%d", bData.income[town.town][1][MONEY]);
-		g_resource.Draw(775, 80, FOOD);
-		DrawFormatString(800, 80, BLACK, "%d", bData.income[town.town][1][FOOD]);
-		if (Event.RMouse.GetOn(730, 60, 770, 100)){
-			
-		}
+	case 2:
+		DrawBuildings(730, 60, 2);
 
-		if (town.built[2]){
-			if (Event.RMouse.GetOn(730, 60, 770, 100)){
-				g_demolish.Draw(730, 60);
-			}
-
+		if (tileInfo.built[2]){
 			PutDemolishButton(730, 60, 2);
 		}
 		else{
-			g_shade.Draw(730, 60);
-			if (Event.RMouse.GetOn(730, 60, 770, 100)){
-				g_build.Draw(730, 60);
-			}
-
 			PutBuildButton(730, 60, 2);
 		}
+		break;
+
+	default:
+		break;
 	}
 
-	if (town.townLv == 0){
-		g_town.Draw(440, 270, 1 + town.town*TOWNS);
-
-		if (money < tData.cost[town.town][1][MONEY]){
-			DrawFormatString(450, 340, RED, "%d", tData.cost[town.town][1][MONEY]);
-		}
-		else{
-			DrawFormatString(450, 340, BLACK, "%d", tData.cost[town.town][1][MONEY]);
-
-			if (!open){
-				PutDevButton(440, 270, 1);
-			}
-		}
-
-		g_resource.Draw(505, 270, MONEY);
-		DrawFormatString(530, 270, BLACK, "+%d", tData.income[town.town][1][MONEY] - tData.income[town.town][0][MONEY]);
-		g_resource.Draw(505, 295, FOOD);
-		DrawFormatString(530, 295, BLACK, "+%d", tData.income[town.town][1][FOOD] - tData.income[town.town][0][FOOD]);
-
-		g_town.Draw(640, 270, 2 + town.town*TOWNS);
-
-		if (money < tData.cost[town.town][2][MONEY]){
-			DrawFormatString(650, 340, RED, "%d", tData.cost[town.town][2][MONEY]);
-		}
-		else{
-			DrawFormatString(650, 340, BLACK, "%d", tData.cost[town.town][2][MONEY]);
-
-			if (!open){
-				PutDevButton(640, 270, 2);
-			}
-		}
-
-		g_resource.Draw(705, 270, MONEY);
-		DrawFormatString(730, 270, BLACK, "+%d", tData.income[town.town][2][MONEY] - tData.income[town.town][0][MONEY]);
-		g_resource.Draw(705, 295, FOOD);
-		DrawFormatString(730, 295, BLACK, "+%d", tData.income[town.town][2][FOOD] - tData.income[town.town][0][FOOD]);
-	}
-
-	g_tile.Draw(720, 470, terrain);
+	g_tile.Draw(720, 470, tileInfo.terrain);
 
 	if (!open){
 		PutRemoveButton(720, 470);
 	}
 
 	open = false;
-
-	/*case 0:
-	case 2:
-	case 4:
-
-		g_town.Draw(540, 270, town + (lv + 1) * TOWNS);
-
-		if (money < tData.cost_m[town][lv + 1]){
-			DrawFormatString(550, 340, RED, "%d", tData.cost_m[town][lv + 1]);
-		}
-		else{
-			DrawFormatString(550, 340, BLACK, "%d", tData.cost_m[town][lv + 1]);
-
-			if (!open){
-				PutDevButton(540, 270, lv + 1);
-			}
-		}
-
-		g_resource.Draw(605, 270, MONEY);
-		DrawFormatString(630, 270, BLACK, "+%d", tData.income_m[town][lv + 1] - tData.income_m[town][lv]);
-		g_resource.Draw(605, 295, FOOD);
-		DrawFormatString(630, 295, BLACK, "+%d", tData.income_f[town][lv + 1] - tData.income_f[town][lv]);
-
-		break;
-
-	default:
-
-		break;
-	}
-
-	g_tile.Draw(570, 470, terrain);
-
-	if (!open){
-		PutRemoveButton(570, 470);
-	}
-
-	open = false;*/
 }

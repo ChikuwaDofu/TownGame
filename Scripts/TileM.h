@@ -7,21 +7,24 @@ const int BLOCKS_X = 10;
 const int BLOCKS_Y = 10;
 const int CROSS_L = 40;
 const int GRID = 60;
+const int B_SIZE = 40;
+const int I_SIZE = 20;
 const int TOWNS = 1;
 const int TLVS = 3;
 const int BUILDINGS = 3;
 const int RESOURCES = 2;
+const int TERRAINS = 1;
 
 enum ETerrain{
-	PLAIN, SEA
+	PLAIN, FOREST
 };
 
 enum ETown{
-	WILD = -1, FARM = 0, PORT = 1
+	WILD = -1, FARM = 0, F_VIL = 1
 };
 
 enum EResource{
-	MONEY, FOOD
+	MONEY, FOOD, WOOD
 };
 
 enum EInfo{
@@ -60,17 +63,14 @@ struct STile{
 };
 
 struct STown{
-	int money;
-	int food;
-	int wood;
-	int stone;
+	int resource[RESOURCES];
 };
 
 struct SInfoBox{
 	SInfoBox();
 	bool open;
 	EMode mode;
-	ETerrain terrain;
+	STown townInfo;
 	static CPicture g_tile;
 	static CPicture g_town;
 	static CPicture g_building;
@@ -86,21 +86,29 @@ struct SInfoBox{
 };
 
 struct SFoundBox :public SInfoBox{
-	SFoundBox(ETerrain type);
-	ETown town;
-	void PutButton(int x, int y, ETown type);
+	SFoundBox(ETerrain type, STown town);
+	ETown town; //ManagerÇ≈égÇ§Åià¯êîÇ∆ÇÕï ï®Åj
+	ETerrain terrain;
+	bool CheckEnough(ETown type);
+	void PutButton(int x, int y, ETown type, int money);
+	void DrawData(int x, int y, ETown type);
 	void DrawFB(int money);
 };
 
 struct STownBox :public SInfoBox{
-	STownBox(ETerrain type);
+	STownBox(STown town, STile tile);
+	STile tileInfo;
 	int devLv;
 	int buildNum;
+	bool CheckDEnough(int lv);
+	bool CheckBEnough(int bNum);
 	void PutRemoveButton(int x, int y);
+	void DrawDev(int x, int y, int lv);
 	void PutDevButton(int x, int y, int lv);
+	void DrawBuildings(int x, int y, int build);
 	void PutBuildButton(int x, int y, int bNum);
 	void PutDemolishButton(int x, int y, int bNum);
-	void DrawTB(STile town, int money);
+	void DrawTB();
 };
 
 class CTileManager{
