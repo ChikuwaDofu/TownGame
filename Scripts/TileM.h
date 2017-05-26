@@ -9,11 +9,11 @@ const int CROSS_L = 40;
 const int GRID = 60;
 const int B_SIZE = 40;
 const int I_SIZE = 20;
-const int TOWNS = 1;
+const int TOWNS = 2;
 const int TLVS = 3;
 const int BUILDINGS = 3;
-const int RESOURCES = 2;
-const int TERRAINS = 1;
+const int RESOURCES = 3;
+const int TERRAINS = 2;
 
 enum ETerrain{
 	PLAIN, FOREST

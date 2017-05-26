@@ -15,7 +15,7 @@ SInfoBox::SInfoBox(){
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", TLVS, TOWNS, GRID, GRID, TLVS*TOWNS);
-	g_building.Load("Chikuwa3/Buildings.png", BUILDINGS, 1, 40, 40, BUILDINGS);
+	g_building.Load("Chikuwa3/Buildings.png", BUILDINGS, TOWNS, 40, 40, BUILDINGS * TOWNS);
 	g_box.Load("Chikuwa3/Box.png");
 	g_shade.Load("Chikuwa3/Shade.png");
 	g_resource.Load("Chikuwa3/RIcons.png", RESOURCES, 1, 20, 20, RESOURCES);
@@ -49,9 +49,20 @@ bool SFoundBox::CheckEnough(ETown type){
 }
 
 void SFoundBox::PutButton(int x, int y, ETown type, int money){
-	g_town.Draw(540, 270, type);
+	g_town.Draw(540, 270, TLVS * type);
 
 	DrawData(540 + GRID + 5, 270, type);
+
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(x - (I_SIZE + 35), y + (I_SIZE + 5) * i, i);
+
+		if (townInfo.resource[i] < tData.cost[type][0][i]){
+			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, RED, "-%d", tData.cost[type][0][i]);
+		}
+		else {
+			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, BLACK, "-%d", tData.cost[type][0][i]);
+		}
+	}
 
 	if (CheckEnough(type)){
 		DrawFormatString(x + 10, y + GRID + 10, BLACK, "%d", tData.cost[type][0][MONEY]);
@@ -60,9 +71,6 @@ void SFoundBox::PutButton(int x, int y, ETown type, int money){
 			town = type;
 			mode = EST;
 		}
-	}
-	else{
-		DrawFormatString(x + 10, y + GRID + 10, RED, "%d", tData.cost[type][0][MONEY]);
 	}
 }
 
@@ -77,8 +85,12 @@ void SFoundBox::DrawFB(int money){
 	DrawIB();
 
 	switch (terrain){
-	case 0:
+	case PLAIN:
 		PutButton(540, 270, FARM, money);
+		break;
+
+	case FOREST:
+		PutButton(540, 270, F_VIL, money);
 		break;
 
 	default:
@@ -120,21 +132,27 @@ bool STownBox::CheckDEnough(int lv){
 }
 
 void STownBox::PutDevButton(int x, int y, int lv){
-	if (CheckDEnough(lv)){
-		DrawFormatString(x + 10, y + GRID + 10, BLACK, "%d", tData.cost[tileInfo.town][lv][MONEY]);
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(x - (I_SIZE + 35), y + (I_SIZE + 5) * i, i);
 
+		if (townInfo.resource[i] < tData.cost[tileInfo.town][lv][i]){
+			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, RED, "-%d", tData.cost[tileInfo.town][lv][i]);
+		}
+		else {
+			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, BLACK, "-%d", tData.cost[tileInfo.town][lv][i]);
+		}
+	}
+
+	if (CheckDEnough(lv)){
 		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
 			mode = DEV;
 			devLv = lv;
 		}
 	}
-	else{
-		DrawFormatString(x + 10, y + GRID + 10, RED, "%d", tData.cost[tileInfo.town][lv][MONEY]);
-	}
 }
 
 void STownBox::DrawBuildings(int x, int y, int build){
-	g_building.Draw(x, y, build);
+	g_building.Draw(x, y, build + BUILDINGS * tileInfo.town);
 
 	for (int i = 0; i < RESOURCES; i++){
 		g_resource.Draw(x + B_SIZE + 5, y - 5 + i * I_SIZE, i);
@@ -155,20 +173,26 @@ bool STownBox::CheckBEnough(int bNum){
 void STownBox::PutBuildButton(int x, int y, int bNum){
 	g_shade.Draw(x, y);
 
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(x - (I_SIZE + 25), y + I_SIZE * i - 5, i);
+
+		if (townInfo.resource[i] < bData.cost[tileInfo.town][bNum][i]){
+			DrawFormatString(x - 20, y + I_SIZE * i - 5, RED, "-%d", bData.cost[tileInfo.town][bNum][i]);
+		}
+		else {
+			DrawFormatString(x - 20, y + I_SIZE * i - 5, BLACK, "-%d", bData.cost[tileInfo.town][bNum][i]);
+		}
+	}
+
 	if (CheckBEnough(bNum)){
 		if (Event.RMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
 			g_build.Draw(x, y);
 		}
 
-		if (Event.LMouse.GetClick(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
+		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
 			mode = BUILD;
 			buildNum = bNum;
 		}
-
-		DrawFormatString(x, y + 45, BLACK, "%d", bData.cost[tileInfo.town][bNum][MONEY]);
-	}
-	else{
-		DrawFormatString(x, y + 45, RED, "%d", bData.cost[tileInfo.town][bNum][MONEY]);
 	}
 }
 
@@ -177,7 +201,7 @@ void STownBox::PutDemolishButton(int x, int y, int bNum){
 		g_demolish.Draw(x, y);
 	}
 
-	if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
+	if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
 		mode = DEMO;
 		buildNum = bNum;
 	}

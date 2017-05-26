@@ -59,6 +59,7 @@ void CTileManager::Set(){
 		town.resource[i] = 100;
 	}
 
+	tile[0].terrain = FOREST;
 	openInfo = false;
 	boxStatus = NO;
 	infoNum = -1;
@@ -189,10 +190,12 @@ void CTileManager::Draw(){
 			}
 		}
 	}
-	g_resource.Draw(75, 50, MONEY);
+	for (int i = 0; i < RESOURCES; i++){
+		g_resource.Draw(75, 50 + I_SIZE * i, i);
+	}
 	DrawFormatString(75 + I_SIZE + 5, 50, YELLOW, "%d (+%d)", town.resource[MONEY], income[MONEY]);
-	g_resource.Draw(75, 50 + I_SIZE, FOOD);
 	DrawFormatString(75 + I_SIZE + 5, 50 + I_SIZE, GREEN, "%d (+%d)", town.resource[FOOD], income[FOOD]);
+	DrawFormatString(75 + I_SIZE + 5, 50 + I_SIZE * 2, ORANGE, "%d (+%d)", town.resource[WOOD], income[WOOD]);
 
 	DrawString(50, 150, "Enter‚ÅŽû“ü‚ðŠl“¾", WHITE);
 
@@ -202,7 +205,7 @@ void CTileManager::Draw(){
 			g_tile.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain);
 
 			if (tile[i].town != WILD){
-				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].townLv + tile[i].town*TOWNS);
+				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].townLv + tile[i].town * TLVS);
 			}
 		}
 
