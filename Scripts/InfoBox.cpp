@@ -4,6 +4,7 @@ CPicture SInfoBox::g_tile;
 CPicture SInfoBox::g_town;
 CPicture SInfoBox::g_box;
 CPicture SInfoBox::g_resource;
+CPicture SInfoBox::g_trade;
 CPicture SInfoBox::g_building;
 CPicture SInfoBox::g_shade;
 CPicture SInfoBox::g_build;
@@ -19,6 +20,7 @@ SInfoBox::SInfoBox(){
 	g_box.Load("Chikuwa3/Box.png");
 	g_shade.Load("Chikuwa3/Shade.png");
 	g_resource.Load("Chikuwa3/RIcons.png", RESOURCES, 1, 20, 20, RESOURCES);
+	g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, 20, 20, TRADE);
 	g_build.Load("Chikuwa3/Build.png");
 	g_demolish.Load("Chikuwa3/Demolish.png");
 }
@@ -54,19 +56,17 @@ void SFoundBox::PutButton(int x, int y, ETown type, int money){
 	DrawData(540 + GRID + 5, 270, type);
 
 	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(x - (I_SIZE + 35), y + (I_SIZE + 5) * i, i);
+		g_resource.Draw(x - (I_SIZE + 35), y + I_SIZE * i, i);
 
 		if (townInfo.resource[i] < tData.cost[type][0][i]){
-			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, RED, "-%d", tData.cost[type][0][i]);
+			DrawFormatString(x - 30, y + I_SIZE * i + 2, RED, "-%d", tData.cost[type][0][i]);
 		}
 		else {
-			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, BLACK, "-%d", tData.cost[type][0][i]);
+			DrawFormatString(x - 30, y + I_SIZE * i + 2, BLACK, "-%d", tData.cost[type][0][i]);
 		}
 	}
 
 	if (CheckEnough(type)){
-		DrawFormatString(x + 10, y + GRID + 10, BLACK, "%d", tData.cost[type][0][MONEY]);
-
 		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
 			town = type;
 			mode = EST;
@@ -76,8 +76,12 @@ void SFoundBox::PutButton(int x, int y, ETown type, int money){
 
 void SFoundBox::DrawData(int x, int y, ETown type){
 	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(x, y + i * (I_SIZE + 5), i);
-		DrawFormatString(x + I_SIZE + 5, y + i * 25, BLACK, "%d", tData.income[type][0][i]);
+		g_resource.Draw(x, y + i * I_SIZE, i);
+		DrawFormatString(x + I_SIZE + 5, y + i * I_SIZE + 2, BLACK, "%d", tData.income[type][0][i]);
+	}
+	for (int i = 0; i < TRADE; i++){
+		g_trade.Draw(x, y + (i + RESOURCES) * I_SIZE, i);
+		DrawFormatString(x + I_SIZE + 5, y + (i + RESOURCES) * I_SIZE + 2, BLACK, "%d", tData.trade[type][0][i]);
 	}
 }
 
@@ -109,15 +113,30 @@ STownBox::STownBox(STown town, STile tile){
 }
 
 void STownBox::PutRemoveButton(int x, int y){
-	if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
-		mode = REMV;
+	g_resource.Draw(x + GRID + 5, y, MONEY);
+	g_resource.Draw(x + GRID + 5, y + I_SIZE + 5, WOOD);
+	DrawFormatString(x + GRID + I_SIZE + 5, y + I_SIZE + 7, BLACK, "+%d", tData.cost[tileInfo.town][tileInfo.townLv][WOOD] / 4);
+
+	if (townInfo.resource[MONEY] >= tData.cost[tileInfo.town][tileInfo.townLv][MONEY] / 2){
+		DrawFormatString(x + GRID + I_SIZE + 5, y + 2, BLACK, "-%d", tData.cost[tileInfo.town][tileInfo.townLv][MONEY] / 2);
+
+		if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
+			mode = REMV;
+		}
+	}
+	else {
+		DrawFormatString(x + GRID + I_SIZE + 5, y + 2, RED, "-%d", tData.cost[tileInfo.town][tileInfo.townLv][MONEY] / 2);
 	}
 }
 
 void STownBox::DrawDev(int x, int y, int lv){
 	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(x, y + i * (I_SIZE + 5), i);
-		DrawFormatString(x + I_SIZE + 5, y + i * (I_SIZE + 5), BLACK, "+%d", tData.income[tileInfo.town][lv][i] - tData.income[tileInfo.town][0][i]);
+		g_resource.Draw(x, y + i * I_SIZE, i);
+		DrawFormatString(x + I_SIZE + 5, y + i * I_SIZE + 2, BLACK, "+%d", tData.income[tileInfo.town][lv][i] - tData.income[tileInfo.town][0][i]);
+	}
+	for (int i = 0; i < TRADE; i++){
+		g_trade.Draw(x, y + (i + RESOURCES) * I_SIZE, i);
+		DrawFormatString(x + I_SIZE + 5, y + (i + RESOURCES) * I_SIZE + 2, BLACK, "+%d", tData.trade[tileInfo.town][lv][i] - tData.trade[tileInfo.town][0][i]);
 	}
 }
 
@@ -133,13 +152,13 @@ bool STownBox::CheckDEnough(int lv){
 
 void STownBox::PutDevButton(int x, int y, int lv){
 	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(x - (I_SIZE + 35), y + (I_SIZE + 5) * i, i);
+		g_resource.Draw(x - (I_SIZE + 35), y + I_SIZE * i, i);
 
 		if (townInfo.resource[i] < tData.cost[tileInfo.town][lv][i]){
-			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, RED, "-%d", tData.cost[tileInfo.town][lv][i]);
+			DrawFormatString(x - 30, y + I_SIZE * i + 2, RED, "-%d", tData.cost[tileInfo.town][lv][i]);
 		}
 		else {
-			DrawFormatString(x - 30, y + (I_SIZE + 5) * i, BLACK, "-%d", tData.cost[tileInfo.town][lv][i]);
+			DrawFormatString(x - 30, y + I_SIZE * i + 2, BLACK, "-%d", tData.cost[tileInfo.town][lv][i]);
 		}
 	}
 
@@ -156,7 +175,11 @@ void STownBox::DrawBuildings(int x, int y, int build){
 
 	for (int i = 0; i < RESOURCES; i++){
 		g_resource.Draw(x + B_SIZE + 5, y - 5 + i * I_SIZE, i);
-		DrawFormatString(x + B_SIZE + I_SIZE + 10, y - 5 + i * I_SIZE, BLACK, "%d", bData.income[tileInfo.town][build][i]);
+		DrawFormatString(x + B_SIZE + I_SIZE + 10, y - 3 + i * I_SIZE, BLACK, "%d", bData.income[tileInfo.town][build][i]);
+	}
+	for (int i = 0; i < TRADE; i++){
+		g_trade.Draw(x + B_SIZE + 5, y - 5 + (i + RESOURCES) * I_SIZE, i);
+		DrawFormatString(x + B_SIZE + I_SIZE + 10, y - 3 + (i + RESOURCES) * I_SIZE, BLACK, "%d", bData.trade[tileInfo.town][build][i]);
 	}
 }
 
@@ -174,13 +197,13 @@ void STownBox::PutBuildButton(int x, int y, int bNum){
 	g_shade.Draw(x, y);
 
 	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(x - (I_SIZE + 25), y + I_SIZE * i - 5, i);
+		g_resource.Draw(x - (I_SIZE + 40), y + I_SIZE * i - 5, i);
 
 		if (townInfo.resource[i] < bData.cost[tileInfo.town][bNum][i]){
-			DrawFormatString(x - 20, y + I_SIZE * i - 5, RED, "-%d", bData.cost[tileInfo.town][bNum][i]);
+			DrawFormatString(x - 35, y + I_SIZE * i - 3, RED, "-%d", bData.cost[tileInfo.town][bNum][i]);
 		}
 		else {
-			DrawFormatString(x - 20, y + I_SIZE * i - 5, BLACK, "-%d", bData.cost[tileInfo.town][bNum][i]);
+			DrawFormatString(x - 35, y + I_SIZE * i - 3, BLACK, "-%d", bData.cost[tileInfo.town][bNum][i]);
 		}
 	}
 
@@ -211,8 +234,12 @@ void STownBox::DrawTB(){
 	DrawIB();
 
 	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(425, 485 + i * I_SIZE, i);
-		DrawFormatString(425 + I_SIZE + 5, 485 + i * I_SIZE, BLACK, "%d", tileInfo.produce[i]);
+		g_resource.Draw(425, 465 + i * I_SIZE, i);
+		DrawFormatString(425 + I_SIZE + 5, 465 + i * I_SIZE + 2, BLACK, "%d", tileInfo.produce[i]);
+	}
+	for (int i = 0; i < TRADE; i++){
+		g_trade.Draw(425, 465 + (i + RESOURCES) * I_SIZE, i);
+		DrawFormatString(425 + I_SIZE + 5, 465 + (i + RESOURCES) * I_SIZE + 2, BLACK, "%d", tileInfo.trade[i]);
 	}
 
 	DrawBuildings(430, 60, 0);

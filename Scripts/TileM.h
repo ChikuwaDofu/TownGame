@@ -14,6 +14,7 @@ const int TLVS = 3;
 const int BUILDINGS = 3;
 const int RESOURCES = 3;
 const int TERRAINS = 2;
+const int TRADE = 2;
 
 enum ETerrain{
 	PLAIN, FOREST
@@ -25,6 +26,10 @@ enum ETown{
 
 enum EResource{
 	MONEY, FOOD, WOOD
+};
+
+enum ETrade{
+	VALUE, POWER
 };
 
 enum EInfo{
@@ -40,6 +45,7 @@ struct STownData{
 
 	int income[TOWNS][TLVS][RESOURCES];
 	int cost[TOWNS][TLVS][RESOURCES];
+	int trade[TOWNS][TLVS][TRADE];
 };
 
 struct SBuildingData{
@@ -47,6 +53,7 @@ struct SBuildingData{
 
 	int income[TOWNS][TLVS][RESOURCES];
 	int cost[TOWNS][TLVS][RESOURCES];
+	int trade[TOWNS][TLVS][TRADE];
 };
 
 struct STile{
@@ -60,10 +67,18 @@ struct STile{
 	bool built[BUILDINGS];
 
 	int produce[RESOURCES];
+	int trade[TRADE];
 };
 
 struct STown{
+	STown();
+
+	int income[RESOURCES];
 	int resource[RESOURCES];
+	int trade[TRADE];
+	int devSum;
+
+	void Set();
 };
 
 struct SInfoBox{
@@ -77,6 +92,7 @@ struct SInfoBox{
 	static CPicture g_box;
 	static CPicture g_shade;
 	static CPicture g_resource;
+	static CPicture g_trade;
 	static CPicture g_build;
 	static CPicture g_demolish;
 	STownData tData;
@@ -117,6 +133,7 @@ private:
 	static CPicture g_town;
 	static CPicture g_frame;
 	static CPicture g_resource;
+	static CPicture g_trade;
 	static CPicture g_num;
 
 	STownData tData;
@@ -132,7 +149,7 @@ private:
 	int infoNum;
 
 public:
-	CTileManager(){}
+	CTileManager(){};
 	void Set();
 	void Draw();
 	void OpenInfo();
