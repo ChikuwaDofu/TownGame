@@ -12,7 +12,7 @@ STownData::STownData(){
 
 	f = fopen("Chikuwa3/TownData.txt", "r");
 	for (int i = 0; i < TOWNS; i++){
-		for (int j = 0; j < TLVS; j++){
+		for (int j = 0; j < TD_TYPES; j++){
 			for (int k = 0; k < RESOURCES; k++){
 				fscanf(f, "%d", &income[i][j][k]);
 			}
@@ -94,7 +94,7 @@ void CTileManager::Set(){
 	infoNum = -1;
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
-	g_town.Load("Chikuwa3/Towns.png", TLVS, TOWNS, GRID, GRID, TLVS*TOWNS);
+	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS, GRID, GRID, TOWNS);
 	g_frame.Load("Chikuwa3/Frame.png");
 	g_resource.Load("Chikuwa3/RIcons.png", RESOURCES, 1, 20, 20, RESOURCES);
 	g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, 20, 20, TRADE);
@@ -139,11 +139,11 @@ void CTileManager::CloseInfo(){
 		case EST:
 			tile[infoNum].town = fbox->town;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] = tData.income[fbox->town][0][i];
-				town.resource[i] -= tData.cost[fbox->town][0][i];
+				tile[infoNum].produce[i] = tData.income[fbox->town][NEW][i];
+				town.resource[i] -= tData.cost[fbox->town][NEW][i];
 			}
 			for (int i = 0; i < TRADE; i++){
-				tile[infoNum].trade[i] = tData.trade[fbox->town][0][i];
+				tile[infoNum].trade[i] = tData.trade[fbox->town][NEW][i];
 			}
 			delete fbox;
 			boxStatus = NO;
@@ -160,8 +160,8 @@ void CTileManager::CloseInfo(){
 			break;
 
 		case REMV:
-			town.resource[MONEY] -= tData.cost[tile[infoNum].town][tile[infoNum].townLv][MONEY] / 2;
-			town.resource[WOOD] += tData.cost[tile[infoNum].town][tile[infoNum].townLv][WOOD] / 4;
+			town.resource[MONEY] -= (tData.cost[tile[infoNum].town][NEW][MONEY] + tData.cost[tile[infoNum].town][LVUP][MONEY] * tile[infoNum].townLv) / 2;
+			town.resource[WOOD] += (tData.cost[tile[infoNum].town][NEW][WOOD] + tData.cost[tile[infoNum].town][LVUP][WOOD] * tile[infoNum].townLv) / 4;
 			for (int i = 0; i < BUILDINGS; i++){
 				if (tile[infoNum].built[i]){
 					tile[infoNum].built[i] = false;
@@ -182,21 +182,11 @@ void CTileManager::CloseInfo(){
 		case DEV:
 			tile[infoNum].townLv = tbox->devLv;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] = tData.income[tile[infoNum].town][tbox->devLv][i];
-				town.resource[i] -= tData.cost[tile[infoNum].town][tile[infoNum].townLv][i];
+				tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
+				town.resource[i] -= tData.cost[tile[infoNum].town][LVUP][i];
 			}
 			for (int i = 0; i < TRADE; i++){
-				tile[infoNum].trade[i] = tData.trade[tile[infoNum].town][tbox->devLv][i];
-			}
-			for (int i = 0; i < BUILDINGS; i++){
-				if (tile[infoNum].built[i]){
-					for (int j = 0; j < RESOURCES; j++){
-						tile[infoNum].produce[j] += bData.income[tile[infoNum].town][i][j];
-					}
-					for (int j = 0; j < TRADE; j++){
-						tile[infoNum].trade[j] += bData.trade[tile[infoNum].town][i][j];
-					}
-				}
+				tile[infoNum].trade[i] += tData.trade[tile[infoNum].town][LVUP][i];
 			}
 			delete tbox;
 			boxStatus = NO;
@@ -289,7 +279,7 @@ void CTileManager::Draw(){
 			g_tile.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain);
 
 			if (tile[i].town != WILD){
-				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].townLv + tile[i].town * TLVS);
+				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].town);
 			}
 		}
 

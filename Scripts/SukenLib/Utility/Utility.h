@@ -50,6 +50,7 @@ const int SAKURAIRO= GetColor(252,238,235);
 const int SAKURA= GetColor(255,234,250);
 
 const int PURPLE = GetColor(154, 85, 200);
+const int LIGHTYELLOW = GetColor(255, 255, 160);
 
 int RainBow(int time=0);
 

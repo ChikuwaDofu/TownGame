@@ -11,6 +11,7 @@ const int B_SIZE = 40;
 const int I_SIZE = 20;
 const int TOWNS = 2;
 const int TLVS = 3;
+const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int RESOURCES = 3;
 const int TERRAINS = 2;
@@ -40,20 +41,24 @@ enum EMode{
 	KEEP, CLOSE, EST, REMV, DEV, BUILD, DEMO
 };
 
+enum ETDType{
+	NEW, LVUP
+};
+
 struct STownData{
 	STownData();
 
-	int income[TOWNS][TLVS][RESOURCES];
-	int cost[TOWNS][TLVS][RESOURCES];
-	int trade[TOWNS][TLVS][TRADE];
+	int income[TOWNS][TD_TYPES][RESOURCES];
+	int cost[TOWNS][TD_TYPES][RESOURCES];
+	int trade[TOWNS][TD_TYPES][TRADE];
 };
 
 struct SBuildingData{
 	SBuildingData();
 
-	int income[TOWNS][TLVS][RESOURCES];
-	int cost[TOWNS][TLVS][RESOURCES];
-	int trade[TOWNS][TLVS][TRADE];
+	int income[TOWNS][BUILDINGS][RESOURCES];
+	int cost[TOWNS][BUILDINGS][RESOURCES];
+	int trade[TOWNS][BUILDINGS][TRADE];
 };
 
 struct STile{
@@ -112,6 +117,8 @@ struct SFoundBox :public SInfoBox{
 };
 
 struct STownBox :public SInfoBox{
+	static CPicture g_lvUp;
+
 	STownBox(STown town, STile tile);
 	STile tileInfo;
 	int devLv;
@@ -122,8 +129,7 @@ struct STownBox :public SInfoBox{
 	void DrawDev(int x, int y, int lv);
 	void PutDevButton(int x, int y, int lv);
 	void DrawBuildings(int x, int y, int build);
-	void PutBuildButton(int x, int y, int bNum);
-	void PutDemolishButton(int x, int y, int bNum);
+	void PutBuildingButton(int x, int y, int bNum, bool isBuilt);
 	void DrawTB();
 };
 
