@@ -16,6 +16,7 @@ const int BUILDINGS = 3;
 const int RESOURCES = 3;
 const int TERRAINS = 2;
 const int TRADE = 2;
+const int STATS = 1;
 
 enum ETerrain{
 	PLAIN, FOREST
@@ -33,12 +34,16 @@ enum ETrade{
 	VALUE, POWER
 };
 
+enum ESta{
+	POP, BDG
+};
+
 enum EInfo{
 	NO, FOUND, TOWN
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, BUILD, DEMO
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO
 };
 
 enum ETDType{
@@ -56,6 +61,7 @@ struct STownData{
 struct SBuildingData{
 	SBuildingData();
 
+	char name[TOWNS][BUILDINGS][100];
 	int income[TOWNS][BUILDINGS][RESOURCES];
 	int cost[TOWNS][BUILDINGS][RESOURCES];
 	int trade[TOWNS][BUILDINGS][TRADE];
@@ -94,7 +100,6 @@ struct SInfoBox{
 	static CPicture g_tile;
 	static CPicture g_town;
 	static CPicture g_building;
-	static CPicture g_box;
 	static CPicture g_shade;
 	static CPicture g_resource;
 	static CPicture g_trade;
@@ -107,6 +112,8 @@ struct SInfoBox{
 };
 
 struct SFoundBox :public SInfoBox{
+	static CPicture g_boxF;
+
 	SFoundBox(ETerrain type, STown town);
 	ETown town; //ManagerÇ≈égÇ§Åià¯êîÇ∆ÇÕï ï®Åj
 	ETerrain terrain;
@@ -117,17 +124,23 @@ struct SFoundBox :public SInfoBox{
 };
 
 struct STownBox :public SInfoBox{
+	bool clickDemo;
+	static CPicture g_boxT;
 	static CPicture g_lvUp;
+	static CPicture g_lvDn;
+	static CPicture g_demoL[2];
 
 	STownBox(STown town, STile tile);
 	STile tileInfo;
-	int devLv;
+	//int devLv;
 	int buildNum;
-	bool CheckDEnough(int lv);
+	bool CheckDEnough();
 	bool CheckBEnough(int bNum);
 	void PutRemoveButton(int x, int y);
-	void DrawDev(int x, int y, int lv);
-	void PutDevButton(int x, int y, int lv);
+	void DrawDev(int x, int y/*, int lv*/);
+	void PutDevButton(int x, int y/*, int lv*/);
+	void DrawDG(int x, int y/*, int lv*/);
+	void PutDGButton(int x, int y/*, int lv*/);
 	void DrawBuildings(int x, int y, int build);
 	void PutBuildingButton(int x, int y, int bNum, bool isBuilt);
 	void DrawTB();
@@ -140,6 +153,7 @@ private:
 	static CPicture g_frame;
 	static CPicture g_resource;
 	static CPicture g_trade;
+	static CPicture g_stats;
 	static CPicture g_num;
 
 	STownData tData;
@@ -153,6 +167,7 @@ private:
 	EInfo boxStatus;
 	bool openInfo;
 	int infoNum;
+	bool forest[BLOCKS_X * BLOCKS_Y];
 
 public:
 	CTileManager(){};

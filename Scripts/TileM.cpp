@@ -5,6 +5,7 @@ CPicture CTileManager::g_town;
 CPicture CTileManager::g_frame;
 CPicture CTileManager::g_resource;
 CPicture CTileManager::g_trade;
+CPicture CTileManager::g_stats;
 CPicture CTileManager::g_num;
 
 STownData::STownData(){
@@ -33,6 +34,7 @@ SBuildingData::SBuildingData(){
 	f = fopen("Chikuwa3/BuildingData.txt", "r");
 	for (int i = 0; i < TOWNS; i++){
 		for (int j = 0; j < BUILDINGS; j++){
+			fscanf(f, "%s", &name[i][j]);
 			for (int k = 0; k < RESOURCES; k++){
 				fscanf(f, "%d", &income[i][j][k]);
 			}
@@ -88,7 +90,21 @@ void CTileManager::Set(){
 		town.resource[i] = 100;
 	}
 
-	tile[0].terrain = FOREST;
+	int c = 0, n = 0;
+	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
+		forest[i] = false;
+	}
+	while (c < 10){
+		n = GetRand(BLOCKS_X * BLOCKS_Y - 1);
+
+		if (!forest[n]){
+			forest[n] = true;
+			tile[n].terrain = FOREST;
+			c++;
+		}
+	}
+
+	//tile[0].terrain = FOREST;
 	openInfo = false;
 	boxStatus = NO;
 	infoNum = -1;
@@ -96,8 +112,9 @@ void CTileManager::Set(){
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS, GRID, GRID, TOWNS);
 	g_frame.Load("Chikuwa3/Frame.png");
-	g_resource.Load("Chikuwa3/RIcons.png", RESOURCES, 1, 20, 20, RESOURCES);
-	g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, 20, 20, TRADE);
+	g_resource.Load("Chikuwa3/RIcons.png", RESOURCES, 1, I_SIZE, I_SIZE, RESOURCES);
+	g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, I_SIZE, I_SIZE, TRADE);
+	g_stats.Load("Chikuwa3/SIcons.png", STATS, 1, I_SIZE, I_SIZE, STATS);
 	g_num.Load("Chikuwa3/Numbers.png", 10, 1, 12, 20, 10);
 }
 
@@ -180,7 +197,22 @@ void CTileManager::CloseInfo(){
 			break;
 
 		case DEV:
-			tile[infoNum].townLv = tbox->devLv;
+			//tile[infoNum].townLv = tbox->devLv;
+			tile[infoNum].townLv++;
+			for (int i = 0; i < RESOURCES; i++){
+				tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
+				town.resource[i] -= tData.cost[tile[infoNum].town][LVUP][i];
+			}
+			for (int i = 0; i < TRADE; i++){
+				tile[infoNum].trade[i] += tData.trade[tile[infoNum].town][LVUP][i];
+			}
+			delete tbox;
+			boxStatus = NO;
+			break;
+			
+		case DG:
+			//tile[infoNum].townLv = tbox->devLv;
+			tile[infoNum].townLv--;
 			for (int i = 0; i < RESOURCES; i++){
 				tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
 				town.resource[i] -= tData.cost[tile[infoNum].town][LVUP][i];
@@ -258,6 +290,8 @@ void CTileManager::Draw(){
 		g_trade.Draw(75, 300 + I_SIZE * i, i);
 	}
 
+	g_stats.Draw(75, 450, 0);
+
 	DrawFormatString(75 + I_SIZE + 5, 52, YELLOW, "%d (+%d)", town.resource[MONEY], town.income[MONEY] + town.trade[VALUE] * town.trade[POWER]);
 	if (town.income[FOOD] - town.devSum >= 0){
 		DrawFormatString(75 + I_SIZE + 5, 52 + I_SIZE, GREEN, "%d (+%d)", town.resource[FOOD], town.income[FOOD] - town.devSum);
@@ -270,6 +304,8 @@ void CTileManager::Draw(){
 	DrawFormatString(75 + I_SIZE + 5, 302, WHITE, "%d", town.trade[VALUE]);
 
 	DrawFormatString(75 + I_SIZE + 5, 302 + I_SIZE, PURPLE, "%d", town.trade[POWER]);
+
+	DrawFormatString(75 + I_SIZE + 5, 452, WHITE, "%d", town.devSum);
 
 	DrawString(50, 150, "Enter‚ÅŽû“ü‚ðŠl“¾", WHITE);
 
