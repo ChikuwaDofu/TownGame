@@ -1,4 +1,16 @@
 #include"TileM.h"
+#include<queue>
+#include<vector>
+
+//1.search all adjacent road tiles with <queue>
+//2.change all adjacent road tiles' connect[a.a.r.t.] to true with <vector>
+
+using namespace std;
+
+queue<int> q;
+int now, nxt;
+int dx[4] = {0, 1, 0, -1}, dy[4] = {1, 0, -1, 0};
+vector<int> v;
 
 CPicture CTileManager::g_tile;
 CPicture CTileManager::g_town;
@@ -58,6 +70,10 @@ STile::STile(){
 	for (int i = 0; i < BUILDINGS; i++){
 		built[i] = false;
 	}
+	fac[0] = false;
+	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
+		connect[i] = false;
+	}
 	for (int i = 0; i < RESOURCES; i++){
 		produce[i] = 0;
 	}
@@ -92,6 +108,7 @@ void CTileManager::Set(){
 
 	int c = 0, n = 0;
 	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
+		tile[i].connect[i] = true;
 		forest[i] = false;
 	}
 	while (c < 10){
@@ -127,6 +144,14 @@ void CTileManager::OpenInfo(){
 		infoNum = (Event.RMouse.GetX() + WINDOW_HEIGHT - WINDOW_WIDTH) / GRID + (Event.RMouse.GetY()) / GRID * BLOCKS_X;
 	}
 
+	/////
+
+	if (Event.RMouse.GetClick(WINDOW_WIDTH - WINDOW_HEIGHT - 1, -1, WINDOW_WIDTH, WINDOW_HEIGHT)){
+		tile[(Event.RMouse.GetX() + WINDOW_HEIGHT - WINDOW_WIDTH) / GRID + (Event.RMouse.GetY()) / GRID * BLOCKS_X].fac[0] = true;
+	}
+
+	/////
+
 	if (info){
 		openInfo = true;
 
@@ -155,6 +180,7 @@ void CTileManager::CloseInfo(){
 
 		case EST:
 			tile[infoNum].town = fbox->town;
+			tile[infoNum].fac[0] = true;
 			for (int i = 0; i < RESOURCES; i++){
 				tile[infoNum].produce[i] = tData.income[fbox->town][NEW][i];
 				town.resource[i] -= tData.cost[fbox->town][NEW][i];
@@ -257,6 +283,47 @@ void CTileManager::CloseInfo(){
 	}
 }
 
+void CTileManager::CheckConnect(int n){
+	/*for (int i = 0; i < 4; i++){
+		if (n % BLOCKS_X + dx[i] >= 0 && n % BLOCKS_X + dx[i] < BLOCKS_X && n / BLOCKS_X + dy[i] >= 0 && n / BLOCKS_X + dy[i] < BLOCKS_Y){
+			for (int j = 0; j < BLOCKS_X * BLOCKS_Y; j++){
+				if (tile[n + dx[i] + dy[i] * 10].connect[j]){
+					tile[n].connect[j] = true;
+				}
+			}
+		}
+	}
+	for (int i = 0; i < 4; i++){
+		if (n % BLOCKS_X + dx[i] >= 0 && n % BLOCKS_X + dx[i] < BLOCKS_X && n / BLOCKS_X + dy[i] >= 0 && n / BLOCKS_X + dy[i] < BLOCKS_Y){
+			for (int j = 0; j < BLOCKS_X * BLOCKS_Y; j++){
+				if (!tile[n + dx[i] + dy[i] * 10].connect[j] && tile[n].connect[j]){
+					tile[n + dx[i] + dy[i] * 10].connect[j] = true;
+				}
+			}
+		}
+	}*/
+	bool search[BLOCKS_X * BLOCKS_Y] = {};
+	search[n] = true;
+	q.push(n);
+	while (!q.empty()){
+		now = q.front();
+		v.push_back(now);
+		q.pop();
+		for (int i = 0; i < 4; i++){
+			nxt = now + dx[i] + dy[i] * BLOCKS_X;
+			if (tile[nxt].fac){
+				q.push(nxt);
+			}
+		}
+	}
+
+	for (int i = 0; i < v.size(); i++){
+		for (int j = 0; j < v.size(); j++){
+			tile[i].connect[j] = true;
+		}
+	}
+}
+
 void CTileManager::Draw(){
 	if (boxStatus == NO){
 		OpenInfo();
@@ -292,7 +359,7 @@ void CTileManager::Draw(){
 
 	g_stats.Draw(75, 450, 0);
 
-	DrawFormatString(75 + I_SIZE + 5, 52, YELLOW, "%d (+%d)", town.resource[MONEY], town.income[MONEY] + town.trade[VALUE] * town.trade[POWER]);
+	DrawFormatString(75 + I_SIZE + 5, 52, YELLOW, "%d (+%d)", town.resource[MONEY], town.income[MONEY]/* + town.trade[VALUE] * town.trade[POWER]*/);
 	if (town.income[FOOD] - town.devSum >= 0){
 		DrawFormatString(75 + I_SIZE + 5, 52 + I_SIZE, GREEN, "%d (+%d)", town.resource[FOOD], town.income[FOOD] - town.devSum);
 	}
@@ -317,6 +384,12 @@ void CTileManager::Draw(){
 			if (tile[i].town != WILD){
 				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].town);
 			}
+
+			/////
+			if (tile[i].fac[0]){
+				DrawCircle(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT + 30, i / BLOCKS_X * GRID + 30, 10, RED);
+			}
+			/////
 		}
 
 		if (Event.RMouse.GetOn(WINDOW_WIDTH - WINDOW_HEIGHT - 1, -1, WINDOW_WIDTH, WINDOW_HEIGHT)){
@@ -327,7 +400,7 @@ void CTileManager::Draw(){
 			for (int i = 0; i < RESOURCES; i++){
 				town.resource[i] += town.income[i];
 			}
-			town.resource[MONEY] += town.trade[VALUE] * town.trade[POWER];
+			//town.resource[MONEY] += town.trade[VALUE] * town.trade[POWER];
 			town.resource[FOOD] -= town.devSum;
 		}
 

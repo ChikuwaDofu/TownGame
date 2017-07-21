@@ -76,9 +76,10 @@ struct STile{
 	ETown town;
 	int townLv;
 	bool built[BUILDINGS];
-
 	int produce[RESOURCES];
 	int trade[TRADE];
+	bool fac[1];
+	bool connect[BLOCKS_X * BLOCKS_Y];
 };
 
 struct STown{
@@ -158,8 +159,8 @@ private:
 
 	STownData tData;
 	SBuildingData bData;
-	STile tile[100];//0 1
-					//2 3
+	STile tile[BLOCKS_X * BLOCKS_Y];//0 1
+									//2 3
 	STown town;
 	SFoundBox *fbox;
 	STownBox *tbox;
@@ -168,6 +169,8 @@ private:
 	bool openInfo;
 	int infoNum;
 	bool forest[BLOCKS_X * BLOCKS_Y];
+
+	void CheckConnect(int n);
 
 public:
 	CTileManager(){};

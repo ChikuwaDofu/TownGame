@@ -27,7 +27,7 @@ SInfoBox::SInfoBox(){
 
 void SInfoBox::DrawIB(){
 
-	if (Event.LMouse.GetClick(WINDOW_WIDTH - CROSS_L - 1, -1, WINDOW_WIDTH, CROSS_L) && !open){
+	if ((Event.LMouse.GetClick(WINDOW_WIDTH - CROSS_L - 1, -1, WINDOW_WIDTH, CROSS_L) || Event.RMouse.GetClick()) && !open){
 		mode = CLOSE;
 	}
 }
@@ -55,7 +55,9 @@ bool SFoundBox::CheckEnough(ETown type){
 
 void SFoundBox::PutButton(int x, int y, ETown type, int money){
 	g_town.Draw(x, y, type);
-
+	
+	DrawString(x - 35 - I_SIZE, y - 20, "コスト", BLACK);
+	DrawString(x + GRID + 5, y - 20, "産出", BLACK);
 	DrawData(x + GRID + 5, y, type);
 
 	for (int i = 0; i < RESOURCES; i++){
@@ -134,7 +136,7 @@ void STownBox::PutRemoveButton(int x, int y){
 
 	int cost = (tData.cost[tileInfo.town][NEW][MONEY] + tData.cost[tileInfo.town][LVUP][MONEY] * tileInfo.townLv) / 2;
 	if (townInfo.resource[MONEY] >= cost){
-		DrawFormatString(x + GRID + I_SIZE + 15, y + I_SIZE - 28, BLACK, "-%d", cost);
+		DrawFormatString(x + GRID + I_SIZE + 20, y + I_SIZE - 28, BLACK, "%d", cost);
 
 		if (Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
 			if (clickDemo){
@@ -150,12 +152,12 @@ void STownBox::PutRemoveButton(int x, int y){
 		}
 	}
 	else {
-		DrawFormatString(x + GRID + I_SIZE + 15, y + I_SIZE - 28, RED, "-%d", cost);
+		DrawFormatString(x + GRID + I_SIZE + 20, y + I_SIZE - 28, RED, "%d", cost);
 	}
 
 	DrawString(x + GRID + 15, y + I_SIZE * 2 - 25, "回収", BLACK);
 	g_resource.Draw(x + GRID + 15, y + I_SIZE * 3 - 25, WOOD);
-	DrawFormatString(x + GRID + I_SIZE + 15, y + I_SIZE * 3 - 21, BLACK, "+%d", (tData.cost[tileInfo.town][NEW][WOOD] + tData.cost[tileInfo.town][LVUP][WOOD] * tileInfo.townLv) / 4);
+	DrawFormatString(x + GRID + I_SIZE + 20, y + I_SIZE * 3 - 21, BLACK, "%d", (tData.cost[tileInfo.town][NEW][WOOD] + tData.cost[tileInfo.town][LVUP][WOOD] * tileInfo.townLv) / 4);
 
 }
 
@@ -201,10 +203,10 @@ void STownBox::PutDevButton(int x, int y/*, int lv*/){
 		g_resource.Draw(x - (I_SIZE + 35), y + I_SIZE * i, i);
 
 		if (townInfo.resource[i] < tData.cost[tileInfo.town][LVUP][i]){
-			DrawFormatString(x - 30, y + I_SIZE * i + 2, RED, "-%d", tData.cost[tileInfo.town][LVUP][i]);
+			DrawFormatString(x - 30, y + I_SIZE * i + 2, RED, "%d", tData.cost[tileInfo.town][LVUP][i]);
 		}
 		else {
-			DrawFormatString(x - 30, y + I_SIZE * i + 2, BLACK, "-%d", tData.cost[tileInfo.town][LVUP][i]);
+			DrawFormatString(x - 30, y + I_SIZE * i + 2, BLACK, "%d", tData.cost[tileInfo.town][LVUP][i]);
 		}
 	}
 
@@ -245,17 +247,17 @@ void STownBox::DrawBuildings(int x, int y, int build){
 	int lim = WINDOW_WIDTH - 191;
 	if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
 		if (mx < lim){
-			DrawBox(mx, my, mx + 175, my + 130, LIGHTYELLOW, true);
+			DrawBox(mx, my, mx + 175, my + 140, LIGHTYELLOW, true);
 
 			DrawFormatString(mx + 5, my + 5, BLACK, "%s", bData.name[tileInfo.town][build]);
 			DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
 			for (int i = 0; i < RESOURCES; i++){
 				g_resource.Draw(mx + 5 + i * 55, my + I_SIZE * 2 + 5, i);
 				if (townInfo.resource[i] < bData.cost[tileInfo.town][build][i]){
-					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "-%d", bData.cost[tileInfo.town][build][i]);
+					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", bData.cost[tileInfo.town][build][i]);
 				}
 				else {
-					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "-%d", bData.cost[tileInfo.town][build][i]);
+					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", bData.cost[tileInfo.town][build][i]);
 				}
 			}
 		
@@ -272,17 +274,17 @@ void STownBox::DrawBuildings(int x, int y, int build){
 			}
 		}
 		else {
-			DrawBox(lim, my, lim + 175, my + 130, LIGHTYELLOW, true);
+			DrawBox(lim, my, lim + 175, my + 140, LIGHTYELLOW, true);
 			
 			DrawFormatString(lim + 5, my + 5, BLACK, "%s", bData.name[tileInfo.town][build]);
 			DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
 			for (int i = 0; i < RESOURCES; i++){
 				g_resource.Draw(lim + 5 + i * 55, my + I_SIZE * 2 + 5, i);
 				if (townInfo.resource[i] < bData.cost[tileInfo.town][build][i]){
-					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "-%d", bData.cost[tileInfo.town][build][i]);
+					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", bData.cost[tileInfo.town][build][i]);
 				}
 				else {
-					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "-%d", bData.cost[tileInfo.town][build][i]);
+					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", bData.cost[tileInfo.town][build][i]);
 				}
 			}
 		
@@ -375,16 +377,16 @@ void STownBox::DrawTB(){
 		PutDGButton(460, 470/*, tileInfo.townLv + 1*/);
 	}
 	
-	DrawString(635, 445, "元の地形", BLACK);
-	g_tile.Draw(640, 470, tileInfo.terrain);
-	DrawString(715, 445, "▼壊す", BLACK);
-	g_demoL[0].Draw(720, 470);
+	DrawString(635, 465, "元の地形", BLACK);
+	g_tile.Draw(640, 490, tileInfo.terrain);
+	DrawString(715, 465, "▼壊す", BLACK);
+	g_demoL[0].Draw(720, 490);
 	if (clickDemo){
-		g_demoL[1].Draw(720, 470);
+		g_demoL[1].Draw(720, 490);
 	}
 
 	if (!open){
-		PutRemoveButton(720, 470);
+		PutRemoveButton(720, 490);
 	}
 
 	open = false;
