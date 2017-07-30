@@ -14,12 +14,15 @@ const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int RESOURCES = 3;
-const int TERRAINS = 2;
+const int TERRAINS = 3;
 const int TRADE = 2;
 const int STATS = 1;
+const int UD_END = 0; //è„â∫ÇÃí[
+const int LR_END = 1; //ç∂âEÇÃí[
+const int R_DIR = 6;
 
 enum ETerrain{
-	PLAIN, FOREST
+	PLAIN, FOREST, RIVER
 };
 
 enum ETown{
@@ -48,6 +51,10 @@ enum EMode{
 
 enum ETDType{
 	NEW, LVUP
+};
+
+enum ERDir {
+	NS, WE, NW, NE, SE, SW
 };
 
 struct STownData{
@@ -156,6 +163,7 @@ private:
 	static CPicture g_trade;
 	static CPicture g_stats;
 	static CPicture g_num;
+	static CPicture g_river;
 
 	STownData tData;
 	SBuildingData bData;
@@ -168,9 +176,10 @@ private:
 	EInfo boxStatus;
 	bool openInfo;
 	int infoNum;
-	bool forest[BLOCKS_X * BLOCKS_Y];
+	//bool forest[BLOCKS_X * BLOCKS_Y];
 
 	void CheckConnect(int n);
+	void DrawRiver(int n);
 
 public:
 	CTileManager(){};

@@ -19,6 +19,7 @@ CPicture CTileManager::g_resource;
 CPicture CTileManager::g_trade;
 CPicture CTileManager::g_stats;
 CPicture CTileManager::g_num;
+CPicture CTileManager::g_river;
 
 STownData::STownData(){
 	FILE* f;
@@ -106,16 +107,289 @@ void CTileManager::Set(){
 		town.resource[i] = 100;
 	}
 
+	int x = 0, y = 0, cnt = 5, r = 0, bf = 1, d[2] = {}, s[2] = {}; //direction, start
+	switch (GetRand(1)) {
+	case 0:
+
+		switch (GetRand(1)) {
+		case 0:
+			x = GetRand(BLOCKS_X - 3) + 1;
+
+			tile[x].terrain = RIVER;
+
+			while (y != BLOCKS_Y - 1) {
+				if (cnt > 0 && bf == 0) {
+					r = GetRand(3);
+					switch (r) {
+					case 2:
+
+						if (tile[x - 1 + y*BLOCKS_X].terrain == PLAIN) {
+							if (x > 1) {
+								x--;
+							}
+							else {
+								x++;
+							}
+							cnt--;
+							bf = 2;
+						}
+						else {
+							y++;
+							if (bf > 0) {
+								bf--;
+							}
+						}
+
+						break;
+
+					case 3:
+						if (tile[x + 1 + y*BLOCKS_X].terrain == PLAIN) {
+							if (x < BLOCKS_X - 2) {
+								x++;
+							}
+							else {
+								x--;
+							}
+							cnt--;
+							bf = 2;
+						}
+						else {
+							y++;
+							if (bf > 0) {
+								bf--;
+							}
+						}
+
+						break;
+
+					default:
+
+						y++;
+						if (bf > 0) {
+							bf--;
+						}
+
+						break;
+					}
+				}
+				else {
+					y++;
+					if (bf > 0) {
+						bf--;
+					}
+				}
+
+				tile[x + y*BLOCKS_X].terrain = RIVER;
+			}
+
+			break;
+
+		case 1:
+			y = GetRand(BLOCKS_Y - 3) + 1;
+
+			tile[y * BLOCKS_X].terrain = RIVER;
+
+			while (x != BLOCKS_X - 1) {
+				if (cnt > 0 && bf == 0) {
+					r = GetRand(3);
+					switch (r) {
+					case 2:
+
+						if (tile[x + (y - 1)*BLOCKS_X].terrain == PLAIN) {
+							if (y > 1) {
+								y--;
+							}
+							else {
+								y++;
+							}
+							cnt--;
+							bf = 2;
+						}
+						else {
+							x++;
+							if (bf > 0) {
+								bf--;
+							}
+						}
+
+						break;
+
+					case 3:
+
+						if (tile[x + 1 + (y + 1)*BLOCKS_X].terrain == PLAIN) {
+							if (y < BLOCKS_Y - 2) {
+								y++;
+							}
+							else {
+								y--;
+							}
+							cnt--;
+							bf = 2;
+						}
+						else {
+							x++;
+							if (bf > 0) {
+								bf--;
+							}
+						}
+
+						break;
+
+					default:
+
+						x++;
+						if (bf > 0) {
+							bf--;
+						}
+
+						break;
+					}
+				}
+				else {
+					x++;
+					if (bf > 0) {
+						bf--;
+					}
+				}
+
+				tile[x + y*BLOCKS_X].terrain = RIVER;
+			}
+
+			break;
+		}
+
+		break;
+
+		case 1:
+
+			d[UD_END] = GetRand(1);
+			d[LR_END] = GetRand(1);
+			s[UD_END] = GetRand(BLOCKS_X - 5) + 2;
+			s[LR_END] = GetRand(BLOCKS_Y - 5) + 2;
+			if (d[LR_END] == 2) {
+				x = 1;
+				if (d[UD_END] == 0) {
+					tile[s[UD_END]].terrain = RIVER;
+					tile[s[LR_END] * BLOCKS_X].terrain = RIVER;
+					tile[s[LR_END] * BLOCKS_X + 1].terrain = RIVER;
+					y = s[LR_END];
+
+					while (x != s[UD_END] || y != 1) {
+						if (x != s[UD_END]) {
+							if (y != 1) {
+								if (GetRand(1) == 0) {
+									x++;
+								}
+								else {
+									y--;
+								}
+							}
+							else {
+								x++;
+							}
+						}
+						else {
+							y--;
+						}
+						tile[x + y*BLOCKS_X].terrain = RIVER;
+					}
+				}
+				else {
+					tile[s[UD_END] + BLOCKS_X * (BLOCKS_Y - 1)].terrain = RIVER;
+					tile[s[LR_END] * BLOCKS_X].terrain = RIVER;
+					tile[s[LR_END] * BLOCKS_X + 1].terrain = RIVER;
+					y = s[LR_END];
+
+					while (x != s[UD_END] || y != BLOCKS_Y - 2) {
+						if (x != s[UD_END]) {
+							if (y != BLOCKS_Y - 2) {
+								if (GetRand(1) == 0) {
+									x++;
+								}
+								else {
+									y++;
+								}
+							}
+							else {
+								x++;
+							}
+						}
+						else {
+							y++;
+						}
+						tile[x + y*BLOCKS_X].terrain = RIVER;
+					}
+				}
+			}
+			else {
+				x = BLOCKS_X - 2;
+				if (d[UD_END] == 0) {
+					tile[s[UD_END]].terrain = RIVER;
+					tile[(s[LR_END] + 1) * BLOCKS_X - 1].terrain = RIVER;
+					tile[(s[LR_END] + 1) * BLOCKS_X - 2].terrain = RIVER;
+					y = s[LR_END];
+
+					while (x != s[UD_END] || y != 1) {
+						if (x != s[UD_END]) {
+							if (y != 1) {
+								if (GetRand(1) == 0) {
+									x--;
+								}
+								else {
+									y--;
+								}
+							}
+							else {
+								x--;
+							}
+						}
+						else {
+							y--;
+						}
+						tile[x + y*BLOCKS_X].terrain = RIVER;
+					}
+				}
+				else {
+					tile[s[UD_END] + BLOCKS_X * (BLOCKS_Y - 1)].terrain = RIVER;
+					tile[(s[LR_END] + 1) * BLOCKS_X - 1].terrain = RIVER;
+					tile[(s[LR_END] + 1) * BLOCKS_X - 2].terrain = RIVER;
+					y = s[LR_END];
+
+					while (x != s[UD_END] || y != BLOCKS_Y - 2) {
+						if (x != s[UD_END]) {
+							if (y != BLOCKS_Y - 2) {
+								if (GetRand(1) == 0) {
+									x--;
+								}
+								else {
+									y++;
+								}
+							}
+							else {
+								x--;
+							}
+						}
+						else {
+							y++;
+						}
+						tile[x + y*BLOCKS_X].terrain = RIVER;
+					}
+				}
+			}
+
+			break;
+	}
+
 	int c = 0, n = 0;
 	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
 		tile[i].connect[i] = true;
-		forest[i] = false;
+		//forest[i] = false;
 	}
 	while (c < 10){
 		n = GetRand(BLOCKS_X * BLOCKS_Y - 1);
 
-		if (!forest[n]){
-			forest[n] = true;
+		if (tile[n].terrain == PLAIN /*!forest[n]*/){
+			//forest[n] = true;
 			tile[n].terrain = FOREST;
 			c++;
 		}
@@ -133,6 +407,7 @@ void CTileManager::Set(){
 	g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, I_SIZE, I_SIZE, TRADE);
 	g_stats.Load("Chikuwa3/SIcons.png", STATS, 1, I_SIZE, I_SIZE, STATS);
 	g_num.Load("Chikuwa3/Numbers.png", 10, 1, 12, 20, 10);
+	g_river.Load("Chikuwa3/River.png", R_DIR, 1, GRID, GRID, R_DIR);
 }
 
 void CTileManager::OpenInfo(){
@@ -324,6 +599,31 @@ void CTileManager::CheckConnect(int n){
 	}
 }
 
+void CTileManager::DrawRiver(int n) {
+	if (n % BLOCKS_X == 0 || (n % BLOCKS_X != 0 && tile[n - 1].terrain == RIVER)) {
+		if (n / BLOCKS_X == 0 || (n / BLOCKS_X != 0 && tile[n - BLOCKS_X].terrain == RIVER)) {
+			g_river.Draw(n%BLOCKS_X*GRID + WINDOW_WIDTH - WINDOW_HEIGHT, n / BLOCKS_X*GRID, NW);
+		}
+		else if (n % BLOCKS_X == BLOCKS_X - 1 || (n % BLOCKS_X != BLOCKS_X - 1 && tile[n + 1].terrain == RIVER)){
+			g_river.Draw(n%BLOCKS_X*GRID + WINDOW_WIDTH - WINDOW_HEIGHT, n / BLOCKS_X*GRID, WE);
+		}
+		else {
+			g_river.Draw(n%BLOCKS_X*GRID + WINDOW_WIDTH - WINDOW_HEIGHT, n / BLOCKS_X*GRID, SW);
+		}
+	}
+	else if (n % BLOCKS_X == BLOCKS_X - 1 || (n % BLOCKS_X != BLOCKS_X - 1 && tile[n + 1].terrain == RIVER)) {
+		if (n / BLOCKS_X == 0 || (n / BLOCKS_X != 0 && tile[n - BLOCKS_X].terrain == RIVER)) {
+			g_river.Draw(n%BLOCKS_X*GRID + WINDOW_WIDTH - WINDOW_HEIGHT, n / BLOCKS_X*GRID, NE);
+		}
+		else {
+			g_river.Draw(n%BLOCKS_X*GRID + WINDOW_WIDTH - WINDOW_HEIGHT, n / BLOCKS_X*GRID, SE);
+		}
+	}
+	else {
+		g_river.Draw(n%BLOCKS_X*GRID + WINDOW_WIDTH - WINDOW_HEIGHT, n / BLOCKS_X*GRID, NS);
+	}
+}
+
 void CTileManager::Draw(){
 	if (boxStatus == NO){
 		OpenInfo();
@@ -379,7 +679,12 @@ void CTileManager::Draw(){
 	switch (boxStatus){
 	case NO:
 		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++){
-			g_tile.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain);
+			if (tile[i].terrain != RIVER) {
+				g_tile.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain);
+			}
+			else {
+				DrawRiver(i);
+			}
 
 			if (tile[i].town != WILD){
 				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].town);
