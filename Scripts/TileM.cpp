@@ -1,16 +1,18 @@
 #include"TileM.h"
 #include<queue>
 #include<vector>
+#include<list>
 
 //1.search all adjacent road tiles with <queue>
 //2.change all adjacent road tiles' connect[a.a.r.t.] to true with <vector>
 
 using namespace std;
 
-queue<int> q;
+//queue<int> q;
 int now, nxt;
 int dx[4] = {0, 1, 0, -1}, dy[4] = {1, 0, -1, 0};
-vector<int> v;
+//vector<int> v;
+vector<int> vec;
 
 CPicture CTileManager::g_tile;
 CPicture CTileManager::g_town;
@@ -71,7 +73,7 @@ STile::STile(){
 	for (int i = 0; i < BUILDINGS; i++){
 		built[i] = false;
 	}
-	fac[0] = false;
+	//fac[0] = false;
 	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
 		connect[i] = false;
 	}
@@ -394,6 +396,40 @@ void CTileManager::Set(){
 			c++;
 		}
 	}
+	c = 0;
+	n = GetRand(BLOCKS_X * BLOCKS_Y - 1);
+	while (tile[n].terrain == RIVER) {
+		n = GetRand(BLOCKS_X * BLOCKS_Y - 1);
+	}
+	vec.push_back(n);
+	while (c < 5 && !vec.empty()) {
+		r = GetRand(vec.size() - 1);
+		n = vec.operator[](r);
+		/////pop‘ã‚í‚è‚Ìvector‚ÌŠÖ”
+		vec.erase(vec.begin() + r);
+		tile[n].terrain = HILL;
+		c++;
+		if (n%BLOCKS_X < BLOCKS_X - 1) {
+			if (tile[n + 1].terrain == PLAIN || tile[n + 1].terrain == FOREST) {
+				vec.push_back(n + 1);
+			}
+		}
+		if (n%BLOCKS_X > 0) {
+			if (tile[n - 1].terrain == PLAIN || tile[n - 1].terrain == FOREST) {
+				vec.push_back(n - 1);
+			}
+		}
+		if (n / BLOCKS_X > 0) {
+			if (tile[n - BLOCKS_X].terrain == PLAIN || tile[n - BLOCKS_X].terrain == FOREST) {
+				vec.push_back(n - BLOCKS_X);
+			}
+		}
+		if (n / BLOCKS_X < BLOCKS_Y - 1) {
+			if (tile[n + BLOCKS_X].terrain == PLAIN || tile[n + BLOCKS_X].terrain == FOREST) {
+				vec.push_back(n + BLOCKS_X);
+			}
+		}
+	}
 
 	//tile[0].terrain = FOREST;
 	openInfo = false;
@@ -558,8 +594,8 @@ void CTileManager::CloseInfo(){
 	}
 }
 
-void CTileManager::CheckConnect(int n){
-	/*for (int i = 0; i < 4; i++){
+/*void CTileManager::CheckConnect(int n){
+	for (int i = 0; i < 4; i++){
 		if (n % BLOCKS_X + dx[i] >= 0 && n % BLOCKS_X + dx[i] < BLOCKS_X && n / BLOCKS_X + dy[i] >= 0 && n / BLOCKS_X + dy[i] < BLOCKS_Y){
 			for (int j = 0; j < BLOCKS_X * BLOCKS_Y; j++){
 				if (tile[n + dx[i] + dy[i] * 10].connect[j]){
@@ -576,7 +612,7 @@ void CTileManager::CheckConnect(int n){
 				}
 			}
 		}
-	}*/
+	}
 	bool search[BLOCKS_X * BLOCKS_Y] = {};
 	search[n] = true;
 	q.push(n);
@@ -597,7 +633,7 @@ void CTileManager::CheckConnect(int n){
 			tile[i].connect[j] = true;
 		}
 	}
-}
+}*/
 
 void CTileManager::DrawRiver(int n) {
 	if (n % BLOCKS_X == 0 || (n % BLOCKS_X != 0 && tile[n - 1].terrain == RIVER)) {
@@ -691,9 +727,9 @@ void CTileManager::Draw(){
 			}
 
 			/////
-			if (tile[i].fac[0]){
+			/*if (tile[i].fac[0]){
 				DrawCircle(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT + 30, i / BLOCKS_X * GRID + 30, 10, RED);
-			}
+			}*/
 			/////
 		}
 

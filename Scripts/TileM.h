@@ -14,7 +14,7 @@ const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int RESOURCES = 3;
-const int TERRAINS = 3;
+const int TERRAINS = 4;
 const int TRADE = 2;
 const int STATS = 1;
 const int UD_END = 0; //è„â∫ÇÃí[
@@ -22,7 +22,7 @@ const int LR_END = 1; //ç∂âEÇÃí[
 const int R_DIR = 6;
 
 enum ETerrain{
-	PLAIN, FOREST, RIVER
+	PLAIN, FOREST, HILL, RIVER
 };
 
 enum ETown{
