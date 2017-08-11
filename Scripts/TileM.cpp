@@ -12,7 +12,7 @@ using namespace std;
 int now, nxt;
 int dx[4] = {0, 1, 0, -1}, dy[4] = {1, 0, -1, 0};
 //vector<int> v;
-vector<int> vec;
+vector<int> vec, res;
 
 CPicture CTileManager::g_tile;
 CPicture CTileManager::g_town;
@@ -22,6 +22,8 @@ CPicture CTileManager::g_trade;
 CPicture CTileManager::g_stats;
 CPicture CTileManager::g_num;
 CPicture CTileManager::g_river;
+CPicture CTileManager::g_hill;
+CPicture CTileManager::g_mineral;
 
 STownData::STownData(){
 	FILE* f;
@@ -68,6 +70,7 @@ STile::STile(){
 	x = x*GRID + WINDOW_WIDTH - WINDOW_HEIGHT;
 	y = y*GRID;
 	terrain = PLAIN;
+	mineral = STONE;
 	town = WILD;
 	townLv = 0;
 	for (int i = 0; i < BUILDINGS; i++){
@@ -107,6 +110,10 @@ void STown::Set(){
 void CTileManager::Set(){
 	for (int i = 0; i < RESOURCES; i++){
 		town.resource[i] = 100;
+	}
+
+	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
+		tflag[i] = false;
 	}
 
 	int x = 0, y = 0, cnt = 5, r = 0, bf = 1, d[2] = {}, s[2] = {}; //direction, start
@@ -401,35 +408,48 @@ void CTileManager::Set(){
 	while (tile[n].terrain == RIVER) {
 		n = GetRand(BLOCKS_X * BLOCKS_Y - 1);
 	}
+	tflag[n] = true;
 	vec.push_back(n);
-	while (c < 5 && !vec.empty()) {
+	while (c < 8 && !vec.empty()) {
 		r = GetRand(vec.size() - 1);
 		n = vec.operator[](r);
-		/////pop‘ã‚í‚è‚Ìvector‚ÌŠÖ”
+		res.push_back(n);
 		vec.erase(vec.begin() + r);
 		tile[n].terrain = HILL;
 		c++;
 		if (n%BLOCKS_X < BLOCKS_X - 1) {
-			if (tile[n + 1].terrain == PLAIN || tile[n + 1].terrain == FOREST) {
+			if ((tile[n + 1].terrain == PLAIN || tile[n + 1].terrain == FOREST) && !tflag[n + 1]) {
 				vec.push_back(n + 1);
+				tflag[n + 1] = true;
 			}
 		}
 		if (n%BLOCKS_X > 0) {
-			if (tile[n - 1].terrain == PLAIN || tile[n - 1].terrain == FOREST) {
+			if ((tile[n - 1].terrain == PLAIN || tile[n - 1].terrain == FOREST) && !tflag[n - 1]) {
 				vec.push_back(n - 1);
+				tflag[n - 1] = true;
 			}
 		}
 		if (n / BLOCKS_X > 0) {
-			if (tile[n - BLOCKS_X].terrain == PLAIN || tile[n - BLOCKS_X].terrain == FOREST) {
+			if ((tile[n - BLOCKS_X].terrain == PLAIN || tile[n - BLOCKS_X].terrain == FOREST) && !tflag[n - BLOCKS_X]) {
 				vec.push_back(n - BLOCKS_X);
+				tflag[n - BLOCKS_X] = true;
 			}
 		}
 		if (n / BLOCKS_X < BLOCKS_Y - 1) {
-			if (tile[n + BLOCKS_X].terrain == PLAIN || tile[n + BLOCKS_X].terrain == FOREST) {
+			if ((tile[n + BLOCKS_X].terrain == PLAIN || tile[n + BLOCKS_X].terrain == FOREST) && !tflag[n + BLOCKS_X]) {
 				vec.push_back(n + BLOCKS_X);
+				tflag[n + BLOCKS_X] = true;
 			}
 		}
 	}
+
+	n = GetRand(res.size() - 1);
+	tile[res.operator[](n)].mineral = GOLD;
+	res.erase(res.begin() + n);
+	n = GetRand(res.size() - 1);
+	tile[res.operator[](n)].mineral = IRON;
+	res.erase(res.begin() + n);
+	tile[res.operator[](GetRand(res.size() - 1))].mineral = IRON;
 
 	//tile[0].terrain = FOREST;
 	openInfo = false;
@@ -444,6 +464,8 @@ void CTileManager::Set(){
 	g_stats.Load("Chikuwa3/SIcons.png", STATS, 1, I_SIZE, I_SIZE, STATS);
 	g_num.Load("Chikuwa3/Numbers.png", 10, 1, 12, 20, 10);
 	g_river.Load("Chikuwa3/River.png", R_DIR, 1, GRID, GRID, R_DIR);
+	g_hill.Load("Chikuwa3/Hill.png", MNR_TYPE, 1, GRID, GRID, MNR_TYPE);
+	g_mineral.Load("Chikuwa3/Mineral.png", MNR_TYPE, 1, R_SIZE, R_SIZE, MNR_TYPE);
 }
 
 void CTileManager::OpenInfo(){
@@ -715,11 +737,14 @@ void CTileManager::Draw(){
 	switch (boxStatus){
 	case NO:
 		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++){
-			if (tile[i].terrain != RIVER) {
+			if (tile[i].terrain != RIVER && tile[i].terrain != HILL) {
 				g_tile.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain);
 			}
-			else {
+			else if (tile[i].terrain == RIVER){
 				DrawRiver(i);
+			}
+			else {
+				g_hill.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].mineral);
 			}
 
 			if (tile[i].town != WILD){
@@ -749,7 +774,7 @@ void CTileManager::Draw(){
 
 	case FOUND:
 
-		fbox->DrawFB(town.resource[MONEY]);
+		fbox->DrawFB(town.resource[MONEY], tile[infoNum].mineral);
 
 		break;
 

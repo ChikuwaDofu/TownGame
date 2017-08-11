@@ -9,6 +9,7 @@ const int CROSS_L = 40;
 const int GRID = 60;
 const int B_SIZE = 40;
 const int I_SIZE = 20;
+const int R_SIZE = 40; //資源アイコン
 const int TOWNS = 2;
 const int TLVS = 3;
 const int TD_TYPES = 2;
@@ -20,6 +21,7 @@ const int STATS = 1;
 const int UD_END = 0; //上下の端
 const int LR_END = 1; //左右の端
 const int R_DIR = 6;
+const int MNR_TYPE = 3; //鉱産資源の種類
 
 enum ETerrain{
 	PLAIN, FOREST, HILL, RIVER
@@ -57,6 +59,10 @@ enum ERDir {
 	NS, WE, NW, NE, SE, SW
 };
 
+enum EMineral {
+	STONE, GOLD, IRON
+};
+
 struct STownData{
 	STownData();
 
@@ -80,6 +86,7 @@ struct STile{
 	int x;
 	int y;
 	ETerrain terrain;
+	EMineral mineral;
 	ETown town;
 	int townLv;
 	bool built[BUILDINGS];
@@ -113,6 +120,7 @@ struct SInfoBox{
 	static CPicture g_trade;
 	static CPicture g_build;
 	static CPicture g_demolish;
+	static CPicture g_mineral;
 	STownData tData;
 	SBuildingData bData;
 
@@ -128,7 +136,7 @@ struct SFoundBox :public SInfoBox{
 	bool CheckEnough(ETown type);
 	void PutButton(int x, int y, ETown type, int money);
 	void DrawData(int x, int y, ETown type);
-	void DrawFB(int money);
+	void DrawFB(int money, EMineral mineral);
 };
 
 struct STownBox :public SInfoBox{
@@ -164,6 +172,8 @@ private:
 	static CPicture g_stats;
 	static CPicture g_num;
 	static CPicture g_river;
+	static CPicture g_hill;
+	static CPicture g_mineral;
 
 	STownData tData;
 	SBuildingData bData;
@@ -177,8 +187,9 @@ private:
 	bool openInfo;
 	int infoNum;
 	//bool forest[BLOCKS_X * BLOCKS_Y];
+	bool tflag[BLOCKS_X * BLOCKS_Y];
 
-	void CheckConnect(int n);
+	//void CheckConnect(int n);
 	void DrawRiver(int n);
 
 public:

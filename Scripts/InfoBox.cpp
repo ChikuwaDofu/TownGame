@@ -9,6 +9,7 @@ CPicture SInfoBox::g_building;
 CPicture SInfoBox::g_shade;
 CPicture SInfoBox::g_build;
 CPicture SInfoBox::g_demolish;
+CPicture SInfoBox::g_mineral;
 
 SInfoBox::SInfoBox(){
 	mode = KEEP;
@@ -23,6 +24,7 @@ SInfoBox::SInfoBox(){
 	g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, 20, 20, TRADE);
 	g_build.Load("Chikuwa3/Build.png");
 	g_demolish.Load("Chikuwa3/Demolish.png");
+	g_mineral.Load("Chikuwa3/Mineral.png", MNR_TYPE, 1, R_SIZE, R_SIZE, MNR_TYPE);
 }
 
 void SInfoBox::DrawIB(){
@@ -90,7 +92,7 @@ void SFoundBox::DrawData(int x, int y, ETown type){
 	}
 }
 
-void SFoundBox::DrawFB(int money){
+void SFoundBox::DrawFB(int money, EMineral mineral){
 	g_boxF.Draw(WINDOW_WIDTH - WINDOW_HEIGHT, 0);
 	DrawIB();
 
@@ -101,6 +103,23 @@ void SFoundBox::DrawFB(int money){
 
 	case FOREST:
 		PutButton(540, 120, F_VIL, money);
+		break;
+
+	case HILL:
+		g_mineral.Draw(WINDOW_WIDTH - WINDOW_HEIGHT + WINDOW_HEIGHT / 2 - R_SIZE / 2, 450 - R_SIZE / 2, mineral);
+		switch (mineral) {
+		case GOLD:
+			DrawString(WINDOW_WIDTH - WINDOW_HEIGHT + WINDOW_HEIGHT / 2 - R_SIZE / 2 + 10, 450 + R_SIZE / 2 + 5, "ã‡", BLACK);
+			break;
+
+		case IRON:
+			DrawString(WINDOW_WIDTH - WINDOW_HEIGHT + WINDOW_HEIGHT / 2 - R_SIZE / 2 - 5, 450 + R_SIZE / 2 + 5, "ìSçzêŒ", BLACK);
+			break;
+
+		default:
+			DrawString(WINDOW_WIDTH - WINDOW_HEIGHT + WINDOW_HEIGHT / 2 - R_SIZE / 2 + 3, 450 + R_SIZE / 2 + 5, "êŒçﬁ", BLACK);
+			break;
+		}
 		break;
 
 	default:
