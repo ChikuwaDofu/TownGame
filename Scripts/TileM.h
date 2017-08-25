@@ -10,7 +10,7 @@ const int GRID = 60;
 const int B_SIZE = 40;
 const int I_SIZE = 20;
 const int R_SIZE = 40; //Ž‘Œ¹ƒAƒCƒRƒ“
-const int TOWNS = 2;
+const int TOWNS = 3;
 const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
@@ -28,7 +28,7 @@ enum ETerrain{
 };
 
 enum ETown{
-	WILD = -1, FARM = 0, F_VIL = 1
+	WILD = -1, FARM = 0, F_VIL = 1, COMM = 2
 };
 
 enum EResource{
@@ -160,6 +160,11 @@ struct STownBox :public SInfoBox{
 	void DrawBuildings(int x, int y, int build);
 	void PutBuildingButton(int x, int y, int bNum, bool isBuilt);
 	void DrawTB();
+};
+
+struct SRiverBox :public SInfoBox{
+	SRiverBox();
+	void DrawRB();
 };
 
 class CTileManager{

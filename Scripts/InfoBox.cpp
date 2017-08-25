@@ -98,7 +98,8 @@ void SFoundBox::DrawFB(int money, EMineral mineral){
 
 	switch (terrain){
 	case PLAIN:
-		PutButton(540, 120, FARM, money);
+		PutButton(470, 120, FARM, money);
+		PutButton(670, 120, COMM, money);
 		break;
 
 	case FOREST:
