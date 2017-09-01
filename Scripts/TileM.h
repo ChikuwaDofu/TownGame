@@ -10,10 +10,12 @@ const int GRID = 60;
 const int B_SIZE = 40;
 const int I_SIZE = 20;
 const int R_SIZE = 40; //éëåπÉAÉCÉRÉì
+const int RB_SIZE = 50; //êÏÇÃåöë¢ï®
 const int TOWNS = 3;
 const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
+const int R_BUILDS = 3;
 const int RESOURCES = 3;
 const int TERRAINS = 4;
 const int TRADE = 2;
@@ -44,7 +46,7 @@ enum ESta{
 };
 
 enum EInfo{
-	NO, FOUND, TOWN
+	NO, FOUND, TOWN, RBUILD
 };
 
 enum EMode{
@@ -78,6 +80,13 @@ struct SBuildingData{
 	int income[TOWNS][BUILDINGS][RESOURCES];
 	int cost[TOWNS][BUILDINGS][RESOURCES];
 	int trade[TOWNS][BUILDINGS][TRADE];
+};
+
+struct SRBuildingData {
+	SRBuildingData();
+
+	char name[R_BUILDS][100];
+	int cost[R_BUILDS][RESOURCES];
 };
 
 struct STile{
@@ -163,8 +172,15 @@ struct STownBox :public SInfoBox{
 };
 
 struct SRiverBox :public SInfoBox{
-	SRiverBox();
-	void DrawRB();
+	static CPicture g_boxR;
+	static CPicture g_RB;
+	SRBuildingData rbData;
+
+	STile tileInfo;
+	int buildNum;
+	SRiverBox(STile tile);
+	void DrawRB(ETown u, ETown d, ETown l, ETown r);
+	void PutRBButton(int x, int y, int bnum, bool isBuilt);
 };
 
 class CTileManager{
@@ -182,11 +198,13 @@ private:
 
 	STownData tData;
 	SBuildingData bData;
+	SRBuildingData rbData;
 	STile tile[BLOCKS_X * BLOCKS_Y];//0 1
 									//2 3
 	STown town;
 	SFoundBox *fbox;
 	STownBox *tbox;
+	SRiverBox *rbox;
 
 	EInfo boxStatus;
 	bool openInfo;

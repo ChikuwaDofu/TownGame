@@ -66,6 +66,19 @@ SBuildingData::SBuildingData(){
 	fclose(f);
 }
 
+SRBuildingData::SRBuildingData() {
+	FILE* f;
+
+	f = fopen("Chikuwa3/RBData.txt", "r");
+	for (int i = 0; i < R_BUILDS; i++) {
+		fscanf(f, "%s", &name[i]);
+		for (int j = 0; j < RESOURCES; j++) {
+			fscanf(f, "%d", &cost[i][j]);
+		}
+	}
+	fclose(f);
+}
+
 STile::STile(){
 	x = x*GRID + WINDOW_WIDTH - WINDOW_HEIGHT;
 	y = y*GRID;
@@ -488,13 +501,19 @@ void CTileManager::OpenInfo(){
 	if (info){
 		openInfo = true;
 
-		if (tile[infoNum].town == -1){
-			fbox = new SFoundBox(tile[infoNum].terrain, town);
-			boxStatus = FOUND;
+		if (tile[infoNum].terrain == RIVER) {
+			rbox = new SRiverBox(tile[infoNum]);
+			boxStatus = RBUILD;
 		}
-		else{
-			tbox = new STownBox(town, tile[infoNum]);
-			boxStatus = TOWN;
+		else {
+			if (tile[infoNum].town == -1) {
+				fbox = new SFoundBox(tile[infoNum].terrain, town);
+				boxStatus = FOUND;
+			}
+			else {
+				tbox = new STownBox(town, tile[infoNum]);
+				boxStatus = TOWN;
+			}
 		}
 	}
 }
@@ -605,6 +624,32 @@ void CTileManager::CloseInfo(){
 				tile[infoNum].trade[i] -= bData.trade[tile[infoNum].town][tbox->buildNum][i];
 			}
 			delete tbox;
+			boxStatus = NO;
+			break;
+		}
+
+		break;
+
+	case RBUILD:
+
+		switch (rbox->mode) {
+		case CLOSE:
+			delete rbox;
+			boxStatus = NO;
+			break;
+
+		case BUILD:
+			tile[infoNum].built[rbox->buildNum] = true;
+			for (int i = 0; i < RESOURCES; i++) {
+				town.resource[i] -= rbData.cost[rbox->buildNum][i];
+			}
+			delete rbox;
+			boxStatus = NO;
+			break;
+
+		case DEMO:
+			tile[infoNum].built[rbox->buildNum] = false;
+			delete rbox;
 			boxStatus = NO;
 			break;
 		}
@@ -734,6 +779,8 @@ void CTileManager::Draw(){
 
 	DrawString(50, 150, "Enter‚ÅŽû“ü‚ðŠl“¾", WHITE);
 
+	ETown u = WILD, d = WILD, l = WILD, r = WILD;
+
 	switch (boxStatus){
 	case NO:
 		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++){
@@ -781,6 +828,26 @@ void CTileManager::Draw(){
 	case TOWN:
 
 		tbox->DrawTB();
+
+		break;
+
+	case RBUILD:
+
+		if (infoNum / BLOCKS_X != 0) {
+			u = tile[infoNum - BLOCKS_X].town;
+		}
+		if (infoNum / BLOCKS_X != BLOCKS_Y - 1) {
+			d = tile[infoNum + BLOCKS_X].town;
+		}
+		if (infoNum % BLOCKS_X != 0) {
+			l = tile[infoNum - 1].town;
+		}
+		if (infoNum % BLOCKS_X != BLOCKS_X - 1) {
+			r = tile[infoNum + 1].town;
+		}
+		rbox->DrawRB(u, d, l, r);
+
+		break;
 
 	default:
 		break;

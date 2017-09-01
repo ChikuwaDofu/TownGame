@@ -411,3 +411,86 @@ void STownBox::DrawTB(){
 
 	open = false;
 }
+
+CPicture SRiverBox::g_boxR;
+CPicture SRiverBox::g_RB;
+
+SRiverBox::SRiverBox(STile tile) {
+	g_boxR.Load("Chikuwa3/Box_R.png");
+	g_RB.Load("Chikuwa3/RBuilding.png", R_BUILDS, 1, RB_SIZE, RB_SIZE, R_BUILDS);
+
+	tileInfo = tile;
+	buildNum = 0;
+}
+
+void SRiverBox::PutRBButton(int x, int y, int bnum, bool isBuilt) {
+	g_RB.Draw(x, y, bnum);
+
+	if(isBuilt){
+		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + RB_SIZE, y + RB_SIZE)) {
+			mode = DEMO;
+			buildNum = bnum;
+		}
+	}
+	else {
+		g_shade.Draw(x, y);
+
+		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + RB_SIZE, y + RB_SIZE)) {
+			mode = BUILD;
+			buildNum = bnum;
+		}
+	}
+
+	int mx = Event.RMouse.GetX();
+	int my = Event.RMouse.GetY();
+	int lim = WINDOW_WIDTH - 191;
+	if (Event.RMouse.GetOn(x - 1, y - 1, x + RB_SIZE, y + RB_SIZE)) {
+		if (mx < lim) {
+			DrawBox(mx, my, mx + 175, my + 140, LIGHTYELLOW, true);
+
+			DrawFormatString(mx + 5, my + 5, BLACK, "%s", rbData.name[bnum]);
+			DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
+			for (int i = 0; i < RESOURCES; i++) {
+				g_resource.Draw(mx + 5 + i * 55, my + I_SIZE * 2 + 5, i);
+				if (townInfo.resource[i] < rbData.cost[bnum][i]) {
+					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", rbData.cost[bnum][i]);
+				}
+				else {
+					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", rbData.cost[bnum][i]);
+				}
+			}
+		}
+		else {
+			DrawBox(lim, my, lim + 175, my + 140, LIGHTYELLOW, true);
+
+			DrawFormatString(lim + 5, my + 5, BLACK, "%s", rbData.name[bnum]);
+			DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
+			for (int i = 0; i < RESOURCES; i++) {
+				g_resource.Draw(lim + 5 + i * 55, my + I_SIZE * 2 + 5, i);
+				if (townInfo.resource[i] < rbData.cost[bnum][i]) {
+					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", rbData.cost[bnum][i]);
+				}
+				else {
+					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", rbData.cost[bnum][i]);
+				}
+			}
+		}
+	}
+}
+
+void SRiverBox::DrawRB(ETown u, ETown d, ETown l, ETown r) {
+	g_boxR.Draw(WINDOW_WIDTH - WINDOW_HEIGHT, 0);
+	DrawIB();
+
+	if (u == FARM || d == FARM || l == FARM || r == FARM) {
+		PutRBButton(430, 65, 0, tileInfo.built[0]);
+	}
+	if ((u != WILD && u != COMM) || (d != WILD && d != COMM) || (l != WILD && l != COMM) || (r != WILD && r != COMM)) {
+		PutRBButton(580, 65, 1, tileInfo.built[1]);
+	}
+	if (u == COMM || d == COMM || l == COMM || r == COMM) {
+		PutRBButton(730, 65, 2, tileInfo.built[2]);
+	}
+
+	open = false;
+}
