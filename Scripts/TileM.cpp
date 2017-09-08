@@ -75,19 +75,40 @@ SRBuildingData::SRBuildingData() {
 		for (int j = 0; j < RESOURCES; j++) {
 			fscanf(f, "%d", &cost[i][j]);
 		}
+		for (int j = 0; j < 2; j++) {
+			fscanf(f, "%s", &exp[i][j]);
+		}
 	}
 	fclose(f);
+}
+
+SSpBuildingData::SSpBuildingData(){
+	FILE* f;
+
+	f = fopen("Chikuwa3/SpBData.txt", "r");
+	for (int i = 0; i < SP_BUILDS; i++){
+		fscanf(f, "%s", &name[i]);
+		for (int j = 0; j < RESOURCES; j++){
+			fscanf(f, "%d", &cost[i][j]);
+		}
+		fscanf(f, "%s", &req[i]);
+		fscanf(f, "%s", &exp[i]);
+	}
 }
 
 STile::STile(){
 	x = x*GRID + WINDOW_WIDTH - WINDOW_HEIGHT;
 	y = y*GRID;
 	terrain = PLAIN;
-	mineral = STONE;
+	mineral = ROCK;
 	town = WILD;
 	townLv = 0;
-	for (int i = 0; i < BUILDINGS; i++){
+	devLim = 0;
+	for (int i = 0; i < BUILDINGS + SP_BUILDS; i++){
 		built[i] = false;
+	}
+	for (int i = 0; i < RESOURCES + TRADE; i++) {
+		buf[i] = 0;
 	}
 	//fac[0] = false;
 	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
@@ -98,6 +119,41 @@ STile::STile(){
 	}
 	for (int i = 0; i < TRADE; i++){
 		trade[i] = 0;
+	}
+}
+
+void STile::SetProduce() {
+	if (town == WILD) {
+		for (int i = 0; i < RESOURCES; i++) {
+			produce[i] = 0;
+		}
+		for (int i = 0; i < TRADE; i++) {
+			trade[i] = 0;
+		}
+	}
+	else {
+		for (int i = 0; i < RESOURCES; i++) {
+			produce[i] = tData.income[town][0][i] + tData.income[town][1][i] * townLv;
+
+			for (int j = 0; j < BUILDINGS; j++) {
+				if (built[j]) {
+					produce[i] += bData.income[town][j][i];
+				}
+			}
+
+			produce[i] *= 1 + buf[i];
+		}
+		for (int i = 0; i < TRADE; i++) {
+			trade[i] = tData.trade[town][0][i] + tData.trade[town][1][i] * townLv;
+
+			for (int j = 0; j < BUILDINGS; j++) {
+				if (built[j]) {
+					trade[i] += bData.trade[town][j][i];
+				}
+			}
+
+			trade[i] *= 1 + buf[RESOURCES + i];
+		}
 	}
 }
 
@@ -116,8 +172,13 @@ void STown::Set(){
 	for (int i = 0; i < TRADE; i++){
 		trade[i] = 0;
 	}
+	for (int i = 0; i < ONLY; i++){
+		onlyOne[i] = false;
+	}
 
 	devSum = 0;
+	towns = 0;
+	townMax = 5;
 }
 
 void CTileManager::Set(){
@@ -532,14 +593,15 @@ void CTileManager::CloseInfo(){
 
 		case EST:
 			tile[infoNum].town = fbox->town;
+			tile[infoNum].devLim = 5;
 			tile[infoNum].fac[0] = true;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] = tData.income[fbox->town][NEW][i];
+				//tile[infoNum].produce[i] = tData.income[fbox->town][NEW][i];
 				town.resource[i] -= tData.cost[fbox->town][NEW][i];
 			}
-			for (int i = 0; i < TRADE; i++){
+			/*for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] = tData.trade[fbox->town][NEW][i];
-			}
+			}*/
 			delete fbox;
 			boxStatus = NO;
 			break;
@@ -557,17 +619,19 @@ void CTileManager::CloseInfo(){
 		case REMV:
 			town.resource[MONEY] -= (tData.cost[tile[infoNum].town][NEW][MONEY] + tData.cost[tile[infoNum].town][LVUP][MONEY] * tile[infoNum].townLv) / 2;
 			town.resource[WOOD] += (tData.cost[tile[infoNum].town][NEW][WOOD] + tData.cost[tile[infoNum].town][LVUP][WOOD] * tile[infoNum].townLv) / 4;
-			for (int i = 0; i < BUILDINGS; i++){
+			town.resource[STONE] += (tData.cost[tile[infoNum].town][NEW][STONE] + tData.cost[tile[infoNum].town][LVUP][STONE] * tile[infoNum].townLv) / 4;
+			for (int i = 0; i < BUILDINGS + SP_BUILDS; i++){
 				if (tile[infoNum].built[i]){
 					tile[infoNum].built[i] = false;
 				}
 			}
-			for (int i = 0; i < RESOURCES; i++){
+			tile[infoNum].devLim = 0;
+			/*for (int i = 0; i < RESOURCES; i++){
 				tile[infoNum].produce[i] = 0;
 			}
 			for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] = 0;
-			}
+			}*/
 			tile[infoNum].town = WILD;
 			tile[infoNum].townLv = 0;
 			delete tbox;
@@ -578,12 +642,12 @@ void CTileManager::CloseInfo(){
 			//tile[infoNum].townLv = tbox->devLv;
 			tile[infoNum].townLv++;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
+				//tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
 				town.resource[i] -= tData.cost[tile[infoNum].town][LVUP][i];
 			}
-			for (int i = 0; i < TRADE; i++){
+			/*for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] += tData.trade[tile[infoNum].town][LVUP][i];
-			}
+			}*/
 			delete tbox;
 			boxStatus = NO;
 			break;
@@ -592,12 +656,12 @@ void CTileManager::CloseInfo(){
 			//tile[infoNum].townLv = tbox->devLv;
 			tile[infoNum].townLv--;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
+				//tile[infoNum].produce[i] += tData.income[tile[infoNum].town][LVUP][i];
 				town.resource[i] -= tData.cost[tile[infoNum].town][LVUP][i];
 			}
-			for (int i = 0; i < TRADE; i++){
+			/*for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] += tData.trade[tile[infoNum].town][LVUP][i];
-			}
+			}*/
 			delete tbox;
 			boxStatus = NO;
 			break;
@@ -605,23 +669,40 @@ void CTileManager::CloseInfo(){
 		case BUILD:
 			tile[infoNum].built[tbox->buildNum] = true;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] += bData.income[tile[infoNum].town][tbox->buildNum][i];
+				//tile[infoNum].produce[i] += bData.income[tile[infoNum].town][tbox->buildNum][i];
 				town.resource[i] -= bData.cost[tile[infoNum].town][tbox->buildNum][i];
 			}
-			for (int i = 0; i < TRADE; i++){
+			/*for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] += bData.trade[tile[infoNum].town][tbox->buildNum][i];
-			}
+			}*/
 			delete tbox;
 			boxStatus = NO;
 			break;
 
-		case DEMO:
-			tile[infoNum].built[tbox->buildNum] = false;
+		//case DEMO:
+		//	tile[infoNum].built[tbox->buildNum] = false;
+		//	/*for (int i = 0; i < RESOURCES; i++){
+		//		tile[infoNum].produce[i] -= bData.income[tile[infoNum].town][tbox->buildNum][i];
+		//	}
+		//	for (int i = 0; i < TRADE; i++){
+		//		tile[infoNum].trade[i] -= bData.trade[tile[infoNum].town][tbox->buildNum][i];
+		//	}*/
+		//	delete tbox;
+		//	boxStatus = NO;
+		//	break;
+
+		case SBUILD:
+			tile[infoNum].built[tbox->buildNum] = true;
 			for (int i = 0; i < RESOURCES; i++){
-				tile[infoNum].produce[i] -= bData.income[tile[infoNum].town][tbox->buildNum][i];
+				town.resource[i] -= sbData.cost[tbox->sBuildNum][i];
 			}
-			for (int i = 0; i < TRADE; i++){
-				tile[infoNum].trade[i] -= bData.trade[tile[infoNum].town][tbox->buildNum][i];
+			switch (tbox->sBuildNum){
+			case 0:
+				tile[infoNum].devLim += 5;
+				break;
+
+			default:
+				break;
 			}
 			delete tbox;
 			boxStatus = NO;
@@ -727,12 +808,95 @@ void CTileManager::DrawRiver(int n) {
 	}
 }
 
+void CTileManager::CheckAdjRB() {
+	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
+		for (int j = 0; j < RESOURCES + TRADE; j++) {
+			tile[i].buf[j] = 0;
+		}
+	}
+
+	bool flag = false;
+	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
+		if (tile[i].terrain == RIVER) {
+			flag = false;
+			for (int j = 0; j < 4; j++) {
+				if ((i + dx[j]) % BLOCKS_X > 0 && (i + dx[j]) % BLOCKS_X < BLOCKS_X - 1 && (i + dy[j]) / BLOCKS_X > 0 && (i + dy[j]) / BLOCKS_X < BLOCKS_Y) {
+					if (tile[i + dx[j] + dy[j] * BLOCKS_X].town != WILD) {
+						flag = true;
+					}
+				}
+			}
+
+			if (!flag) {
+				for (int j = 0; j < R_BUILDS; j++) {
+					tile[i].built[j] = false;
+				}
+			}
+		}
+	}
+
+	if (flag) {
+		for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
+			if (tile[i].terrain == RIVER) {
+				if (i / BLOCKS_X > 0) {
+					if (tile[i].built[0] && tile[i - BLOCKS_X].town == FARM) {
+						tile[i - BLOCKS_X].buf[FOOD] = 0.2;
+					}
+					if (tile[i].built[1] && tile[i - BLOCKS_X].town != WILD && tile[i - BLOCKS_X].town != COMM) {
+						tile[i - BLOCKS_X].buf[RESOURCES + VALUE] = 0.1;
+					}
+					if (tile[i].built[2] && tile[i - BLOCKS_X].town == FARM) {
+						tile[i - BLOCKS_X].buf[RESOURCES + POWER] = 0.2;
+					}
+				}
+				if (i / BLOCKS_X < BLOCKS_Y - 1) {
+					if (tile[i].built[0] && tile[i + BLOCKS_X].town == FARM) {
+						tile[i + BLOCKS_X].buf[FOOD] = 0.2;
+					}
+					if (tile[i].built[1] && tile[i + BLOCKS_X].town != WILD && tile[i + BLOCKS_X].town != COMM) {
+						tile[i + BLOCKS_X].buf[RESOURCES + VALUE] = 0.1;
+					}
+					if (tile[i].built[2] && tile[i + BLOCKS_X].town == FARM) {
+						tile[i + BLOCKS_X].buf[RESOURCES + POWER] = 0.2;
+					}
+				}
+				if (i % BLOCKS_X > 0) {
+					if (tile[i].built[0] && tile[i - 1].town == FARM) {
+						tile[i - 1].buf[FOOD] = 0.2;
+					}
+					if (tile[i].built[1] && tile[i - 1].town != WILD && tile[i - 1].town != COMM) {
+						tile[i - 1].buf[RESOURCES + VALUE] = 0.1;
+					}
+					if (tile[i].built[2] && tile[i - 1].town == FARM) {
+						tile[i - 1].buf[RESOURCES + POWER] = 0.2;
+					}
+				}
+				if (i % BLOCKS_X < BLOCKS_X - 1) {
+					if (tile[i].built[0] && tile[i + 1].town == FARM) {
+						tile[i + 1].buf[FOOD] = 0.2;
+					}
+					if (tile[i].built[1] && tile[i + 1].town != WILD && tile[i + 1].town != COMM) {
+						tile[i + 1].buf[RESOURCES + VALUE] = 0.1;
+					}
+					if (tile[i].built[2] && tile[i + 1].town == FARM) {
+						tile[i + 1].buf[RESOURCES + POWER] = 0.2;
+					}
+				}
+			}
+		}
+	}
+}
+
 void CTileManager::Draw(){
 	if (boxStatus == NO){
 		OpenInfo();
 	}
 	else{
 		CloseInfo();
+		CheckAdjRB();
+		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+			tile[i].SetProduce();
+		}
 	}
 
 	town.Set();
@@ -740,6 +904,12 @@ void CTileManager::Draw(){
 	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
 		if (tile[i].town != WILD){
 			town.devSum += tile[i].townLv + 1;
+			town.towns++;
+		}
+
+		if (tile[i].town == COMM && tile[i].built[3]){
+			town.onlyOne[T_HALL] = true;
+			town.townMax += 5;
 		}
 	}
 
@@ -760,6 +930,12 @@ void CTileManager::Draw(){
 		g_trade.Draw(75, 300 + I_SIZE * i, i);
 	}
 
+	town.income[MONEY] += town.trade[VALUE] * double (town.trade[POWER] / 5);
+
+	for (int i = 0; i < STATS; i++){
+		g_stats.Draw(75, 450 + i * I_SIZE, i); 
+	}
+
 	g_stats.Draw(75, 450, 0);
 
 	DrawFormatString(75 + I_SIZE + 5, 52, YELLOW, "%d (+%d)", town.resource[MONEY], town.income[MONEY]/* + town.trade[VALUE] * town.trade[POWER]*/);
@@ -771,11 +947,15 @@ void CTileManager::Draw(){
 	}
 	DrawFormatString(75 + I_SIZE + 5, 52 + I_SIZE * 2, ORANGE, "%d (+%d)", town.resource[WOOD], town.income[WOOD]);
 
+	DrawFormatString(75 + I_SIZE + 5, 52 + I_SIZE * 3, GRAY, "%d (+%d)", town.resource[STONE], town.income[STONE]);
+
 	DrawFormatString(75 + I_SIZE + 5, 302, WHITE, "%d", town.trade[VALUE]);
 
 	DrawFormatString(75 + I_SIZE + 5, 302 + I_SIZE, PURPLE, "%d", town.trade[POWER]);
 
 	DrawFormatString(75 + I_SIZE + 5, 452, WHITE, "%d", town.devSum);
+
+	DrawFormatString(75 + I_SIZE + 5, 452 + I_SIZE, WHITE, "%d/%d", town.towns, town.townMax);
 
 	DrawString(50, 150, "Enter‚ÅŽû“ü‚ðŠl“¾", WHITE);
 

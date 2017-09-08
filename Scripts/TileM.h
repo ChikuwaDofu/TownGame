@@ -16,14 +16,16 @@ const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int R_BUILDS = 3;
-const int RESOURCES = 3;
+const int SP_BUILDS = 2;
+const int RESOURCES = 4;
 const int TERRAINS = 4;
 const int TRADE = 2;
-const int STATS = 1;
+const int STATS = 2;
 const int UD_END = 0; //上下の端
 const int LR_END = 1; //左右の端
 const int R_DIR = 6;
 const int MNR_TYPE = 3; //鉱産資源の種類
+const int ONLY = 1;
 
 enum ETerrain{
 	PLAIN, FOREST, HILL, RIVER
@@ -34,7 +36,7 @@ enum ETown{
 };
 
 enum EResource{
-	MONEY, FOOD, WOOD
+	MONEY, FOOD, WOOD, STONE
 };
 
 enum ETrade{
@@ -50,7 +52,7 @@ enum EInfo{
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD
 };
 
 enum ETDType{
@@ -62,7 +64,11 @@ enum ERDir {
 };
 
 enum EMineral {
-	STONE, GOLD, IRON
+	ROCK, GOLD, IRON
+};
+
+enum EOnly {
+	T_HALL
 };
 
 struct STownData{
@@ -87,6 +93,16 @@ struct SRBuildingData {
 
 	char name[R_BUILDS][100];
 	int cost[R_BUILDS][RESOURCES];
+	char exp[R_BUILDS][3][100];
+};
+
+struct SSpBuildingData{
+	SSpBuildingData();
+
+	char name[SP_BUILDS][100];
+	int cost[SP_BUILDS][RESOURCES];
+	char req[SP_BUILDS][100];
+	char exp[SP_BUILDS][100];
 };
 
 struct STile{
@@ -98,20 +114,29 @@ struct STile{
 	EMineral mineral;
 	ETown town;
 	int townLv;
-	bool built[BUILDINGS];
+	bool built[BUILDINGS + SP_BUILDS];
 	int produce[RESOURCES];
 	int trade[TRADE];
 	bool fac[1];
 	bool connect[BLOCKS_X * BLOCKS_Y];
+	double buf[RESOURCES + TRADE];
+	int devLim;
+	STownData tData;
+	SBuildingData bData;
+
+	void SetProduce();
 };
 
-struct STown{
+struct STown /*地域全体*/ {
 	STown();
 
 	int income[RESOURCES];
 	int resource[RESOURCES];
 	int trade[TRADE];
 	int devSum;
+	int towns;
+	int townMax;
+	bool onlyOne[ONLY];
 
 	void Set();
 };
@@ -124,7 +149,8 @@ struct SInfoBox{
 	static CPicture g_tile;
 	static CPicture g_town;
 	static CPicture g_building;
-	static CPicture g_shade;
+	static CPicture g_shadeS;
+	static CPicture g_shadeL;
 	static CPicture g_resource;
 	static CPicture g_trade;
 	static CPicture g_build;
@@ -154,20 +180,26 @@ struct STownBox :public SInfoBox{
 	static CPicture g_lvUp;
 	static CPicture g_lvDn;
 	static CPicture g_demoL[2];
+	static CPicture g_SB;
 
 	STownBox(STown town, STile tile);
 	STile tileInfo;
+	SSpBuildingData sbData;
 	//int devLv;
 	int buildNum;
+	int sBuildNum;
 	bool CheckDEnough();
 	bool CheckBEnough(int bNum);
+	bool CheckSBEnough(int bNum);
 	void PutRemoveButton(int x, int y);
 	void DrawDev(int x, int y/*, int lv*/);
 	void PutDevButton(int x, int y/*, int lv*/);
 	void DrawDG(int x, int y/*, int lv*/);
 	void PutDGButton(int x, int y/*, int lv*/);
 	void DrawBuildings(int x, int y, int build);
+	void DrawSBuildings(int x, int y, int build, bool popReq);
 	void PutBuildingButton(int x, int y, int bNum, bool isBuilt);
+	void PutSpBuildButton(int x, int y, int bNum, int tbNum, bool isBuilt);
 	void DrawTB();
 };
 
@@ -180,7 +212,8 @@ struct SRiverBox :public SInfoBox{
 	int buildNum;
 	SRiverBox(STile tile);
 	void DrawRB(ETown u, ETown d, ETown l, ETown r);
-	void PutRBButton(int x, int y, int bnum, bool isBuilt);
+	void PutRBButton(int x, int y, int bNum, bool isBuilt);
+	void DrawDataBox(int x, int y, int bNum);
 };
 
 class CTileManager{
@@ -199,6 +232,7 @@ private:
 	STownData tData;
 	SBuildingData bData;
 	SRBuildingData rbData;
+	SSpBuildingData sbData;
 	STile tile[BLOCKS_X * BLOCKS_Y];//0 1
 									//2 3
 	STown town;
@@ -214,6 +248,7 @@ private:
 
 	//void CheckConnect(int n);
 	void DrawRiver(int n);
+	void CheckAdjRB();
 
 public:
 	CTileManager(){};
