@@ -10,8 +10,9 @@ const int GRID = 60;
 const int B_SIZE = 40;
 const int I_SIZE = 20;
 const int R_SIZE = 40; //資源アイコン
+const int G_SIZE = 40;
 const int RB_SIZE = 50; //川の建造物
-const int TOWNS = 3;
+const int TOWNS = 6;
 const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
@@ -19,6 +20,7 @@ const int R_BUILDS = 3;
 const int SP_BUILDS = 2;
 const int RESOURCES = 4;
 const int TERRAINS = 4;
+const int GOODS = 17;
 const int TRADE = 2;
 const int STATS = 2;
 const int UD_END = 0; //上下の端
@@ -32,7 +34,7 @@ enum ETerrain{
 };
 
 enum ETown{
-	WILD = -1, FARM = 0, F_VIL = 1, COMM = 2
+	WILD = -1, FARM = 0, F_VIL = 1, COMM = 2, MINE_S = 3, MINE_G = 4, MINE_I = 5
 };
 
 enum EResource{
@@ -76,7 +78,9 @@ struct STownData{
 
 	int income[TOWNS][TD_TYPES][RESOURCES];
 	int cost[TOWNS][TD_TYPES][RESOURCES];
-	int trade[TOWNS][TD_TYPES][TRADE];
+	//int trade[TOWNS][TD_TYPES][TRADE];
+	int goods[TOWNS][TD_TYPES];
+	int trade[TOWNS][TD_TYPES];
 };
 
 struct SBuildingData{
@@ -85,7 +89,9 @@ struct SBuildingData{
 	char name[TOWNS][BUILDINGS][100];
 	int income[TOWNS][BUILDINGS][RESOURCES];
 	int cost[TOWNS][BUILDINGS][RESOURCES];
-	int trade[TOWNS][BUILDINGS][TRADE];
+	//int trade[TOWNS][BUILDINGS][TRADE];
+	int goods[TOWNS][BUILDINGS];
+	int trade[TOWNS][BUILDINGS];
 };
 
 struct SRBuildingData {
@@ -105,6 +111,12 @@ struct SSpBuildingData{
 	char exp[SP_BUILDS][100];
 };
 
+struct SGoodsData{
+	SGoodsData();
+
+	double value[GOODS];
+};
+
 struct STile{
 	STile();
 
@@ -116,7 +128,8 @@ struct STile{
 	int townLv;
 	bool built[BUILDINGS + SP_BUILDS];
 	int produce[RESOURCES];
-	int trade[TRADE];
+	//int trade[TRADE];
+	int goods[GOODS];
 	bool fac[1];
 	bool connect[BLOCKS_X * BLOCKS_Y];
 	double buf[RESOURCES + TRADE];
@@ -133,6 +146,10 @@ struct STown /*地域全体*/ {
 	int income[RESOURCES];
 	int resource[RESOURCES];
 	int trade[TRADE];
+	int goodsPro[GOODS]; //Production
+	int goodsCon[GOODS]; //Consumption
+	double exSum; //export
+	double inSum; //inport
 	int devSum;
 	int towns;
 	int townMax;
@@ -152,7 +169,8 @@ struct SInfoBox{
 	static CPicture g_shadeS;
 	static CPicture g_shadeL;
 	static CPicture g_resource;
-	static CPicture g_trade;
+	//static CPicture g_trade;
+	static CPicture g_goods;
 	static CPicture g_build;
 	static CPicture g_demolish;
 	static CPicture g_mineral;
@@ -222,17 +240,21 @@ private:
 	static CPicture g_town;
 	static CPicture g_frame;
 	static CPicture g_resource;
-	static CPicture g_trade;
+	//static CPicture g_trade;
+	static CPicture g_goods;
 	static CPicture g_stats;
 	static CPicture g_num;
 	static CPicture g_river;
 	static CPicture g_hill;
 	static CPicture g_mineral;
+	static CPicture g_tBut; //trade
+	static CPicture g_rBut; //region
 
 	STownData tData;
 	SBuildingData bData;
 	SRBuildingData rbData;
 	SSpBuildingData sbData;
+	SGoodsData gData;
 	STile tile[BLOCKS_X * BLOCKS_Y];//0 1
 									//2 3
 	STown town;
@@ -245,6 +267,7 @@ private:
 	int infoNum;
 	//bool forest[BLOCKS_X * BLOCKS_Y];
 	bool tflag[BLOCKS_X * BLOCKS_Y];
+	bool showTrade;
 
 	//void CheckConnect(int n);
 	void DrawRiver(int n);
