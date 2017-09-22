@@ -51,6 +51,7 @@ const int SAKURA= GetColor(255,234,250);
 
 const int PURPLE = GetColor(154, 85, 200);
 const int LIGHTYELLOW = GetColor(255, 255, 160);
+const int DARKGREEN = GetColor(0, 128, 0);
 
 int RainBow(int time=0);
 

@@ -12,6 +12,7 @@ const int I_SIZE = 20;
 const int R_SIZE = 40; //資源アイコン
 const int G_SIZE = 40;
 const int RB_SIZE = 50; //川の建造物
+const int BRB_SIZE = 60;
 const int TOWNS = 6;
 const int TLVS = 3;
 const int TD_TYPES = 2;
@@ -19,7 +20,7 @@ const int BUILDINGS = 3;
 const int R_BUILDS = 3;
 const int SP_BUILDS = 2;
 const int RESOURCES = 4;
-const int TERRAINS = 4;
+const int TERRAINS = 6;
 const int GOODS = 17;
 const int TRADE = 2;
 const int STATS = 2;
@@ -30,11 +31,11 @@ const int MNR_TYPE = 3; //鉱産資源の種類
 const int ONLY = 1;
 
 enum ETerrain{
-	PLAIN, FOREST, HILL, RIVER
+	PLAIN, FOREST, HILL_S, HILL_G, HILL_I, RIVER
 };
 
 enum ETown{
-	WILD = -1, FARM = 0, F_VIL = 1, COMM = 2, MINE_S = 3, MINE_G = 4, MINE_I = 5
+	WILD, FARM, F_VIL, COMM, MINE_S, MINE_G, MINE_I
 };
 
 enum EResource{
@@ -50,7 +51,7 @@ enum ESta{
 };
 
 enum EInfo{
-	NO, FOUND, TOWN, RBUILD
+	NO, FOUND, TOWN, RBUILD, T_DATA, BUY
 };
 
 enum EMode{
@@ -76,22 +77,22 @@ enum EOnly {
 struct STownData{
 	STownData();
 
-	int income[TOWNS][TD_TYPES][RESOURCES];
-	int cost[TOWNS][TD_TYPES][RESOURCES];
+	int income[TOWNS + 1][TD_TYPES][RESOURCES];
+	int cost[TOWNS + 1][TD_TYPES][RESOURCES];
 	//int trade[TOWNS][TD_TYPES][TRADE];
-	int goods[TOWNS][TD_TYPES];
-	int trade[TOWNS][TD_TYPES];
+	int goods[TOWNS + 1][TD_TYPES];
+	int trade[TOWNS + 1][TD_TYPES];
 };
 
 struct SBuildingData{
 	SBuildingData();
 
-	char name[TOWNS][BUILDINGS][100];
-	int income[TOWNS][BUILDINGS][RESOURCES];
-	int cost[TOWNS][BUILDINGS][RESOURCES];
+	char name[TOWNS + 1][BUILDINGS][100];
+	int income[TOWNS + 1][BUILDINGS][RESOURCES];
+	int cost[TOWNS + 1][BUILDINGS][RESOURCES];
 	//int trade[TOWNS][BUILDINGS][TRADE];
-	int goods[TOWNS][BUILDINGS];
-	int trade[TOWNS][BUILDINGS];
+	int goods[TOWNS + 1][BUILDINGS];
+	int trade[TOWNS + 1][BUILDINGS];
 };
 
 struct SRBuildingData {
@@ -107,6 +108,7 @@ struct SSpBuildingData{
 
 	char name[SP_BUILDS][100];
 	int cost[SP_BUILDS][RESOURCES];
+	bool onlyOne[SP_BUILDS];
 	char req[SP_BUILDS][100];
 	char exp[SP_BUILDS][100];
 };
@@ -123,7 +125,7 @@ struct STile{
 	int x;
 	int y;
 	ETerrain terrain;
-	EMineral mineral;
+	//EMineral mineral;
 	ETown town;
 	int townLv;
 	bool built[BUILDINGS + SP_BUILDS];
@@ -132,7 +134,7 @@ struct STile{
 	int goods[GOODS];
 	bool fac[1];
 	bool connect[BLOCKS_X * BLOCKS_Y];
-	double buf[RESOURCES + TRADE];
+	double buf[RESOURCES + 1];
 	int devLim;
 	STownData tData;
 	SBuildingData bData;
@@ -145,11 +147,13 @@ struct STown /*地域全体*/ {
 
 	int income[RESOURCES];
 	int resource[RESOURCES];
-	int trade[TRADE];
 	int goodsPro[GOODS]; //Production
 	int goodsCon[GOODS]; //Consumption
 	double exSum; //export
 	double inSum; //inport
+	double exFin;
+	double inFin;
+	int trade;
 	int devSum;
 	int towns;
 	int townMax;
@@ -189,7 +193,7 @@ struct SFoundBox :public SInfoBox{
 	bool CheckEnough(ETown type);
 	void PutButton(int x, int y, ETown type, int money);
 	void DrawData(int x, int y, ETown type);
-	void DrawFB(int money, EMineral mineral);
+	void DrawFB(int money/*, EMineral mineral*/);
 };
 
 struct STownBox :public SInfoBox{
@@ -228,10 +232,32 @@ struct SRiverBox :public SInfoBox{
 
 	STile tileInfo;
 	int buildNum;
-	SRiverBox(STile tile);
+	SRiverBox(STown town, STile tile);
+	bool CheckRBEnough(int bNum);
 	void DrawRB(ETown u, ETown d, ETown l, ETown r);
 	void PutRBButton(int x, int y, int bNum, bool isBuilt);
 	void DrawDataBox(int x, int y, int bNum);
+};
+
+struct STradeBox :public SInfoBox {
+	static CPicture g_boxG;
+	SGoodsData gData;
+
+	STradeBox(STown town);
+	void DrawTB();
+};
+
+struct SBuyBox :public SInfoBox {
+	static CPicture g_boxB;
+	static CPicture g_brbut;
+	bool bought;
+	EResource rType;
+	int amount;
+	int cost;
+	
+	SBuyBox(STown town);
+	void DrawBB(int money);
+	void PutBuyButton(int x, int y, int trade, EResource type, int c, int a, int money);
 };
 
 class CTileManager{
@@ -249,6 +275,7 @@ private:
 	static CPicture g_mineral;
 	static CPicture g_tBut; //trade
 	static CPicture g_rBut; //region
+	static CPicture g_bBut; //buy
 
 	STownData tData;
 	SBuildingData bData;
@@ -261,6 +288,8 @@ private:
 	SFoundBox *fbox;
 	STownBox *tbox;
 	SRiverBox *rbox;
+	STradeBox *gbox;
+	SBuyBox *bbox;
 
 	EInfo boxStatus;
 	bool openInfo;
@@ -268,10 +297,13 @@ private:
 	//bool forest[BLOCKS_X * BLOCKS_Y];
 	bool tflag[BLOCKS_X * BLOCKS_Y];
 	bool showTrade;
+	bool loaded;
 
 	//void CheckConnect(int n);
 	void DrawRiver(int n);
 	void CheckAdjRB();
+	void WriteData();
+	void ReadData();
 
 public:
 	CTileManager(){};

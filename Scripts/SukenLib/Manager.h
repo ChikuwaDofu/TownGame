@@ -1,7 +1,7 @@
 #pragma once
 
-#define DEBUG
-#define DEBUG_DRAW
+//#define DEBUG
+//#define DEBUG_DRAW
 //#define SCENE_TRANSITION_ANIMATION
 //#define USE_LUA  //Luaスクリプトを使うならコメントアウトを解除する
 //そしてプロジェクト直下にlua5.1.dllを配置
