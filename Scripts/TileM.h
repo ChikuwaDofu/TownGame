@@ -13,7 +13,7 @@ const int R_SIZE = 40; //資源アイコン
 const int G_SIZE = 40;
 const int RB_SIZE = 50; //川の建造物
 const int BRB_SIZE = 60;
-const int TOWNS = 6;
+const int TOWNS = 9;
 const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
@@ -35,7 +35,7 @@ enum ETerrain{
 };
 
 enum ETown{
-	WILD, FARM, F_VIL, COMM, MINE_S, MINE_G, MINE_I
+	WILD, FARM, F_VIL, COMM, MINE_S, MINE_G, MINE_I, PAS_S, PAS_C, PAS_P
 };
 
 enum EResource{
@@ -55,7 +55,7 @@ enum EInfo{
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT
 };
 
 enum ETDType{
@@ -77,6 +77,7 @@ enum EOnly {
 struct STownData{
 	STownData();
 
+	char name[TOWNS + 1][100];
 	int income[TOWNS + 1][TD_TYPES][RESOURCES];
 	int cost[TOWNS + 1][TD_TYPES][RESOURCES];
 	//int trade[TOWNS][TD_TYPES][TRADE];
@@ -186,8 +187,10 @@ struct SInfoBox{
 
 struct SFoundBox :public SInfoBox{
 	static CPicture g_boxF;
+	static CPicture g_cbut;
+	bool cut;
 
-	SFoundBox(ETerrain type, STown town);
+	SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p);
 	ETown town; //Managerで使う（引数とは別物）
 	ETerrain terrain;
 	bool CheckEnough(ETown type);

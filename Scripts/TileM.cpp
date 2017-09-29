@@ -35,6 +35,7 @@ STownData::STownData(){
 
 	f = fopen("Chikuwa3/TownData.txt", "r");
 	for (int i = 1; i <= TOWNS; i++){
+		fscanf(f, "%s", &name[i]);
 		for (int j = 0; j < TD_TYPES; j++){
 			for (int k = 0; k < RESOURCES; k++){
 				fscanf(f, "%d", &income[i][j][k]);
@@ -559,7 +560,7 @@ void CTileManager::Set(){
 		tile[i].connect[i] = true;
 		//forest[i] = false;
 	}
-	while (c < 10){
+	while (c < 75){
 		n = GetRand(BLOCKS_X * BLOCKS_Y - 1);
 
 		if (tile[n].terrain == PLAIN /*!forest[n]*/){
@@ -668,7 +669,58 @@ void CTileManager::OpenInfo(){
 		}
 		else {
 			if (tile[infoNum].town == WILD) {
-				fbox = new SFoundBox(tile[infoNum].terrain, town);
+				bool flag[4] = {};
+				if (tile[infoNum].terrain == FOREST) {
+					for (int i = 0; i < 4; i++) {
+						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town != WILD) {
+								flag[0] = true;
+							}
+						}
+					}
+				}
+
+				switch (tile[infoNum].terrain) {
+				case PLAIN:
+					for (int i = 0; i < 4; i++) {
+						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_S && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+								flag[1] = true;
+							}
+							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_C && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+								flag[2] = true;
+							}
+						}
+					}
+					break;
+
+				case FOREST:
+					for (int i = 0; i < 4; i++) {
+						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_P && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+								flag[4] = true;
+							}
+						}
+					}
+					break;
+
+				case HILL_S:
+				case HILL_G:
+				case HILL_I:
+					for (int i = 0; i < 4; i++) {
+						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_S && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+								flag[1] = true;
+							}
+						}
+					}
+					break;
+
+				default:
+					break;
+				}
+
+				fbox = new SFoundBox(tile[infoNum].terrain, town, flag[0], flag[1], flag[2], flag[3]);
 				boxStatus = FOUND;
 			}
 			else {
@@ -701,6 +753,13 @@ void CTileManager::CloseInfo(){
 			/*for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] = tData.trade[fbox->town][NEW][i];
 			}*/
+			delete fbox;
+			boxStatus = NO;
+			break;
+
+		case CUT:
+			tile[infoNum].terrain = PLAIN;
+			town.resource[MONEY] -= 50;
 			delete fbox;
 			boxStatus = NO;
 			break;
@@ -1110,7 +1169,6 @@ void CTileManager::Draw(){
 	}
 
 	//town.income[MONEY] += town.trade[VALUE] * double (town.trade[POWER] / 5);
-	bool flag = false;
 	/*if (showTrade){
 		DrawString(10 + G_SIZE + 15, 50, "âø", YELLOW);
 		DrawString(10 + G_SIZE + 52, 50, "ê∂", GREEN);
@@ -1222,7 +1280,7 @@ void CTileManager::Draw(){
 		}
 
 		g_tBut.Draw(75, 520);
-		if (Event.LMouse.GetClick(74, 519, 183, 570) && !flag) {
+		if (Event.LMouse.GetClick(74, 519, 183, 570)/* && !flag*/) {
 			//showTrade = true;
 
 			gbox = new STradeBox(town);
@@ -1230,7 +1288,7 @@ void CTileManager::Draw(){
 		}
 
 		g_bBut.Draw(75, 430);
-		if (Event.LMouse.GetClick(74, 429, 175, 480) && !flag) {
+		if (Event.LMouse.GetClick(74, 429, 175, 480)/* && !flag*/) {
 			bbox = new SBuyBox(town);
 			boxStatus = BUY;
 		}

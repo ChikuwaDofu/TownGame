@@ -41,12 +41,15 @@ void SInfoBox::DrawIB(){
 /////
 
 CPicture SFoundBox::g_boxF;
+CPicture SFoundBox::g_cbut;
 
-SFoundBox::SFoundBox(ETerrain type, STown town){
+SFoundBox::SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p){
 	terrain = type;
 	townInfo = town;
+	cut = cFlag;
 
 	g_boxF.Load("Chikuwa3/Box_F.png");
+	g_cbut.Load("Chikuwa3/CButton.png");
 }
 
 bool SFoundBox::CheckEnough(ETown type){
@@ -62,6 +65,7 @@ bool SFoundBox::CheckEnough(ETown type){
 void SFoundBox::PutButton(int x, int y, ETown type, int money){
 	g_town.Draw(x, y, type);
 	
+	DrawFormatString(x - 35 - I_SIZE, y - 40, BLACK, "%s", tData.name[type]);
 	DrawString(x - 35 - I_SIZE, y - 20, "ÉRÉXÉg", BLACK);
 	DrawString(x + GRID + 5, y - 20, "éYèo", BLACK);
 	DrawData(x + GRID + 5, y, type);
@@ -145,8 +149,11 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/){
 	if (townInfo.towns < townInfo.townMax){
 		switch (terrain){
 		case PLAIN:
-			PutButton(470, 120, FARM, money);
-			PutButton(670, 120, COMM, money);
+			PutButton(470, 100, FARM, money);
+			PutButton(670, 100, COMM, money);
+			PutButton(390, 270, PAS_S, money);
+			PutButton(570, 270, PAS_C, money);
+			PutButton(750, 270, PAS_P, money);
 			break;
 
 		case FOREST:
@@ -188,6 +195,22 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/){
 	else {
 		DrawString(500, 120, "Ç±ÇÍà»è„ìsésÇë¢ÇÍÇ‹ÇπÇÒÅI", BLACK);
 	}
+
+	if (cut) {
+		g_cbut.Draw(550, 425);
+		DrawString(545, 482, "ÉRÉXÉg", BLACK);
+		g_resource.Draw(605, 480, MONEY);
+
+		if (money >= 50) {
+			DrawString(630, 482, "50", BLACK);
+			if (Event.LMouse.GetClick(549, 424, 650, 475) && !open) {
+				mode = CUT;
+			}
+		}else{
+			DrawString(630, 482, "50", RED);
+		}
+	}
+
 	open = false;
 }
 
@@ -552,7 +575,8 @@ void STownBox::DrawTB(){
 	g_boxT.Draw(WINDOW_WIDTH - WINDOW_HEIGHT, 0);
 	DrawIB();
 
-	DrawFormatString(415, 230, BLACK, "ìsésêlå˚:%d/%d", tileInfo.townLv + 1, tileInfo.devLim);
+	DrawFormatString(415, 210, BLACK, "%s", tData.name[tileInfo.town]);
+	DrawFormatString(415, 235, BLACK, "ìsésêlå˚:%d/%d", tileInfo.townLv + 1, tileInfo.devLim);
 	DrawString(440, 255, "éYèo", BLACK);
 	for (int i = 0; i < RESOURCES; i++){
 		g_resource.Draw(450, 275 + i * I_SIZE, i);
