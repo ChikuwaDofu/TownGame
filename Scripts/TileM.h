@@ -21,7 +21,7 @@ const int R_BUILDS = 3;
 const int SP_BUILDS = 2;
 const int RESOURCES = 4;
 const int TERRAINS = 6;
-const int GOODS = 17;
+const int GOODS = 20;
 const int TRADE = 2;
 const int STATS = 2;
 const int UD_END = 0; //上下の端
@@ -51,11 +51,11 @@ enum ESta{
 };
 
 enum EInfo{
-	NO, FOUND, TOWN, RBUILD, T_DATA, BUY
+	NO, FOUND, TOWN, RBUILD, T_DATA, BUY, PST
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P
 };
 
 enum ETDType{
@@ -120,6 +120,15 @@ struct SGoodsData{
 	double value[GOODS];
 };
 
+struct SPastureData {
+	SPastureData();
+
+	char name[3][100];
+	int cost[3][RESOURCES];
+	int income[3][RESOURCES];
+	int goods[3];
+};
+
 struct STile{
 	STile();
 
@@ -139,6 +148,7 @@ struct STile{
 	int devLim;
 	STownData tData;
 	SBuildingData bData;
+	SPastureData pData;
 
 	void SetProduce();
 };
@@ -171,6 +181,7 @@ struct SInfoBox{
 	static CPicture g_tile;
 	static CPicture g_town;
 	static CPicture g_building;
+	static CPicture g_pasture;
 	static CPicture g_shadeS;
 	static CPicture g_shadeL;
 	static CPicture g_resource;
@@ -188,14 +199,20 @@ struct SInfoBox{
 struct SFoundBox :public SInfoBox{
 	static CPicture g_boxF;
 	static CPicture g_cbut;
+	static CPicture g_pasture;
 	bool cut;
+	bool pasture[3];
+	SPastureData pData;
 
 	SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p);
 	ETown town; //Managerで使う（引数とは別物）
+	int pType;
 	ETerrain terrain;
 	bool CheckEnough(ETown type);
-	void PutButton(int x, int y, ETown type, int money);
-	void DrawData(int x, int y, ETown type);
+	void PutTB(int x, int y, ETown type);
+	void PutPB(int x, int y, int type);
+	void DrawTData(int x, int y, ETown type);
+	void DrawPData(int x, int y, int type);
 	void DrawFB(int money/*, EMineral mineral*/);
 };
 
@@ -228,6 +245,19 @@ struct STownBox :public SInfoBox{
 	void DrawTB();
 };
 
+struct SPastureBox :public SInfoBox {
+	static CPicture g_boxP;
+	static CPicture g_pasture;
+	static CPicture g_demoP;
+	int money;
+	int num;
+	STile tileInfo;
+	SPastureData pData;
+
+	SPastureBox(STile tile, int m, int n);
+	void DrawPB();
+};
+
 struct SRiverBox :public SInfoBox{
 	static CPicture g_boxR;
 	static CPicture g_RB;
@@ -244,10 +274,12 @@ struct SRiverBox :public SInfoBox{
 
 struct STradeBox :public SInfoBox {
 	static CPicture g_boxG;
+	static CPicture g_arrow;
 	SGoodsData gData;
 
 	STradeBox(STown town);
 	void DrawTB();
+	void DrawArrow(int x, int y, int n);
 };
 
 struct SBuyBox :public SInfoBox {
@@ -267,6 +299,7 @@ class CTileManager{
 private:
 	static CPicture g_tile;
 	static CPicture g_town;
+	static CPicture g_pasture;
 	static CPicture g_frame;
 	static CPicture g_resource;
 	//static CPicture g_trade;
@@ -285,11 +318,13 @@ private:
 	SRBuildingData rbData;
 	SSpBuildingData sbData;
 	SGoodsData gData;
+	SPastureData pData;
 	STile tile[BLOCKS_X * BLOCKS_Y];//0 1
 									//2 3
 	STown town;
 	SFoundBox *fbox;
 	STownBox *tbox;
+	SPastureBox *pbox;
 	SRiverBox *rbox;
 	STradeBox *gbox;
 	SBuyBox *bbox;

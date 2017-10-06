@@ -17,6 +17,7 @@ vector<int> vec, res;
 
 CPicture CTileManager::g_tile;
 CPicture CTileManager::g_town;
+CPicture CTileManager::g_pasture;
 CPicture CTileManager::g_frame;
 CPicture CTileManager::g_resource;
 //CPicture CTileManager::g_trade;
@@ -132,6 +133,23 @@ SGoodsData::SGoodsData(){
 	fclose(f);
 }
 
+SPastureData::SPastureData() {
+	FILE* f;
+
+	f = fopen("Chikuwa3/PData.txt", "r");
+	for (int i = 0; i < 3; i++) {
+		fscanf(f, "%s", &name[i]);
+		for (int j = 0; j < RESOURCES; j++) {
+			fscanf(f, "%d", &cost[i][j]);
+		}
+		for (int j = 0; j < RESOURCES; j++) {
+			fscanf(f, "%d", &income[i][j]);
+		}
+		fscanf(f, "%d", &goods[i]);
+	}
+	fclose(f);
+}
+
 STile::STile(){
 	x = x*GRID + WINDOW_WIDTH - WINDOW_HEIGHT;
 	y = y*GRID;
@@ -172,6 +190,27 @@ void STile::SetProduce() {
 		}*/
 		for (int i = 0; i < GOODS; i++) {
 			goods[i] = 0;
+		}
+
+		if (terrain != RIVER) {
+			if (built[0]) {
+				for (int i = 0; i < RESOURCES; i++) {
+					produce[i] += pData.income[0][i];
+				}
+				goods[pData.goods[0]]++;
+			}
+			if (built[1]) {
+				for (int i = 0; i < RESOURCES; i++) {
+					produce[i] += pData.income[1][i];
+				}
+				goods[pData.goods[1]]++;
+			}
+			if (built[2]) {
+				for (int i = 0; i < RESOURCES; i++) {
+					produce[i] += pData.income[2][i];
+				}
+				goods[pData.goods[2]]++;
+			}
 		}
 	}
 	else {
@@ -229,7 +268,9 @@ void STile::SetProduce() {
 
 		switch (town){
 		case FARM:
-			devLim += 5;
+			if (built[3]) {
+				devLim += 5;
+			}
 			break;
 
 		default:
@@ -625,6 +666,7 @@ void CTileManager::Set(){
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS + 1, GRID, GRID, TOWNS + 1);
+	g_pasture.Load("Chikuwa3/Pasture.png", TERRAINS, 3, GRID, GRID, TERRAINS * 3);
 	g_frame.Load("Chikuwa3/Frame.png");
 	g_resource.Load("Chikuwa3/RIcons.png", RESOURCES, 1, I_SIZE, I_SIZE, RESOURCES);
 	//g_trade.Load("Chikuwa3/TIcons.png", TRADE, 1, I_SIZE, I_SIZE, TRADE);
@@ -669,59 +711,77 @@ void CTileManager::OpenInfo(){
 		}
 		else {
 			if (tile[infoNum].town == WILD) {
-				bool flag[4] = {};
-				if (tile[infoNum].terrain == FOREST) {
-					for (int i = 0; i < 4; i++) {
-						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
-							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town != WILD) {
-								flag[0] = true;
-							}
-						}
+				int num = 0;
+				for (int i = 0; i < BUILDINGS; i++) {
+					if (tile[infoNum].built[i]) {
+						num = i + 1;
 					}
 				}
-
-				switch (tile[infoNum].terrain) {
-				case PLAIN:
-					for (int i = 0; i < 4; i++) {
-						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
-							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_S && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
-								flag[1] = true;
-							}
-							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_C && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
-								flag[2] = true;
-							}
-						}
-					}
-					break;
-
-				case FOREST:
-					for (int i = 0; i < 4; i++) {
-						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
-							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_P && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
-								flag[4] = true;
+				bool flag[4] = {};
+				switch (num) {
+				case 0:
+					if (tile[infoNum].terrain == FOREST) {
+						for (int i = 0; i < 4; i++) {
+							if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+								if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town != WILD) {
+									flag[0] = true;
+								}
 							}
 						}
 					}
-					break;
 
-				case HILL_S:
-				case HILL_G:
-				case HILL_I:
-					for (int i = 0; i < 4; i++) {
-						if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
-							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_S && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
-								flag[1] = true;
+					switch (tile[infoNum].terrain) {
+					case PLAIN:
+						for (int i = 0; i < 4; i++) {
+							if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+								if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_S && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+									flag[1] = true;
+								}
+								if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_C && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+									flag[2] = true;
+								}
 							}
 						}
+						break;
+
+					case FOREST:
+						for (int i = 0; i < 4; i++) {
+							if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+								if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_P && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+									flag[3] = true;
+								}
+							}
+						}
+						break;
+
+					case HILL_S:
+					case HILL_G:
+					case HILL_I:
+						for (int i = 0; i < 4; i++) {
+							if (infoNum % BLOCKS_X + dx[i] >= 0 && infoNum % BLOCKS_X + dx[i] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] >= 0 && infoNum / BLOCKS_X + dy[i] < BLOCKS_Y) {
+								if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].town == PAS_S && tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0]) {
+									flag[1] = true;
+								}
+							}
+						}
+						break;
+
+					default:
+						break;
 					}
+
+					fbox = new SFoundBox(tile[infoNum].terrain, town, flag[0], flag[1], flag[2], flag[3]);
+					boxStatus = FOUND;
+
 					break;
 
 				default:
+
+					pbox = new SPastureBox(tile[infoNum], town.resource[MONEY], num - 1);
+					boxStatus = PST;
+
 					break;
 				}
-
-				fbox = new SFoundBox(tile[infoNum].terrain, town, flag[0], flag[1], flag[2], flag[3]);
-				boxStatus = FOUND;
 			}
 			else {
 				tbox = new STownBox(town, tile[infoNum]);
@@ -760,6 +820,15 @@ void CTileManager::CloseInfo(){
 		case CUT:
 			tile[infoNum].terrain = PLAIN;
 			town.resource[MONEY] -= 50;
+			delete fbox;
+			boxStatus = NO;
+			break;
+
+		case BLD_P:
+			tile[infoNum].built[fbox->pType] = true;
+			for (int i = 0; i < RESOURCES; i++) {
+				town.resource[i] -= pData.cost[fbox->pType][i];
+			}
 			delete fbox;
 			boxStatus = NO;
 			break;
@@ -922,6 +991,27 @@ void CTileManager::CloseInfo(){
 		switch (bbox->mode) {
 		case CLOSE:
 			delete bbox;
+			boxStatus = NO;
+			break;
+
+		default:
+			break;
+		}
+
+		break;
+
+	case PST:
+
+		switch (pbox->mode) {
+		case CLOSE:
+			delete pbox;
+			boxStatus = NO;
+			break;
+
+		case DEMO:
+			tile[infoNum].built[pbox->num] = false;
+			town.resource[MONEY] -= 30;
+			delete pbox;
 			boxStatus = NO;
 			break;
 
@@ -1144,6 +1234,7 @@ void CTileManager::Draw(){
 	town.goodsCon[12] = town.goodsPro[13] * 3;
 	town.goodsCon[14] = town.goodsPro[15] * 3;
 	town.goodsCon[15] = town.goodsPro[16];
+	town.goodsCon[17] = town.goodsPro[18] * 2;
 
 	for (int i = 2; i < GOODS; i++) {
 		if (town.goodsPro[i] >= town.goodsCon[i]) {
@@ -1271,6 +1362,17 @@ void CTileManager::Draw(){
 			if (tile[i].town != WILD){
 				g_town.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].town);
 			}
+			else if (tile[i].terrain != RIVER){
+				if (tile[i].built[0]) {
+					g_pasture.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain);
+				}
+				if (tile[i].built[1]) {
+					g_pasture.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain + TERRAINS);
+				}
+				if (tile[i].built[2]) {
+					g_pasture.Draw(i % BLOCKS_X * GRID + WINDOW_WIDTH - WINDOW_HEIGHT, i / BLOCKS_X * GRID, tile[i].terrain + TERRAINS * 2);
+				}
+			}
 
 			/////
 			/*if (tile[i].fac[0]){
@@ -1359,6 +1461,12 @@ void CTileManager::Draw(){
 			town.resource[MONEY] -= bbox->cost;
 			town.resource[bbox->rType] += bbox->amount;
 		}
+
+		break;
+
+	case PST:
+
+		pbox->DrawPB();
 
 		break;
 
