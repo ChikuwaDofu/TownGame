@@ -13,6 +13,7 @@ CPicture SInfoBox::g_shadeL;
 CPicture SInfoBox::g_build;
 CPicture SInfoBox::g_demolish;
 CPicture SInfoBox::g_mineral;
+CPicture SInfoBox::g_sArea;
 
 SInfoBox::SInfoBox(){
 	mode = KEEP;
@@ -31,6 +32,7 @@ SInfoBox::SInfoBox(){
 	g_build.Load("Chikuwa3/Build.png");
 	g_demolish.Load("Chikuwa3/Demolish.png");
 	g_mineral.Load("Chikuwa3/Mineral.png", MNR_TYPE, 1, R_SIZE, R_SIZE, MNR_TYPE);
+	g_sArea.Load("Chikuwa3/SpArea.png", 1, SP_AREAS + 1, GRID, GRID, SP_AREAS + 1);
 }
 
 void SInfoBox::DrawIB(){
@@ -45,22 +47,110 @@ void SInfoBox::DrawIB(){
 CPicture SFoundBox::g_boxF;
 CPicture SFoundBox::g_cbut;
 CPicture SFoundBox::g_pasture;
+CPicture SFoundBox::g_saBut;
+CPicture SFoundBox::g_naBut;
 
 SFoundBox::SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p){
 	terrain = type;
 	townInfo = town;
 	pType = 0;
+	saType = 0;
 	cut = cFlag;
 	pasture[0] = pas_s;
 	pasture[1] = pas_c;
 	pasture[2] = pas_p;
+	spArea = false;
+	spAAble[0] = false;
+	for (int i = 1; i <= SP_AREAS; i++) {
+		spAAble[i] = CheckSpAAble(i);
+	}
 
 	g_boxF.Load("Chikuwa3/Box_F.png");
 	g_cbut.Load("Chikuwa3/CButton.png");
 	g_pasture.Load("Chikuwa3/Pasture.png", TERRAINS, 3, GRID, GRID, TERRAINS * 3);
+	g_saBut.Load("Chikuwa3/SaButton.png");
+	g_naBut.Load("Chikuwa3/NaButton.png");
 }
 
-bool SFoundBox::CheckEnough(ETown type){
+bool SFoundBox::CheckSpAAble(int n) {
+	int sum = 0;
+	for (int i = 1; i <= TOWNS; i++) {
+		if (saData.rPType[n][i]) {
+			sum += townInfo.tTypePop[i];
+		}
+	}
+	if (sum >= saData.reqPop[n]) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool SFoundBox::CheckSAEnough(int type) {
+	for (int i = 0; i < RESOURCES; i++) {
+		if (townInfo.resource[i] < saData.cost[type][i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void SFoundBox::PutSAB(int x, int y, int type) {
+	g_sArea.Draw(x, y, type);
+	
+	DrawFormatString(x - 35 - I_SIZE, y - 40, BLACK, "%s", saData.name[type]);
+	DrawString(x - 35 - I_SIZE, y - 20, "コスト", BLACK);
+
+	bool flag = true;
+	for (int i = 0; i < RESOURCES; i++) {
+		g_resource.Draw(x - (I_SIZE + 45), y + I_SIZE * i, i);
+		if (townInfo.resource[i] < saData.cost[type][i]) {
+			flag = false;
+			DrawFormatString(x - 40, y + I_SIZE * i + 2, RED, "-%d", saData.cost[type][i]);
+		}
+		else {
+			DrawFormatString(x - 40, y + I_SIZE * i + 2, BLACK, "-%d", saData.cost[type][i]);
+		}
+	}
+	if (flag) {
+		if (!open && Event.LMouse.GetClick(x, y, x + GRID, y + GRID) && spAAble[type]) {
+			saType = type;
+			mode = BLD_SA;
+		}
+	}
+}
+
+void SFoundBox::DrawSAReq(int x, int y, int type, bool ok) {
+	int mx = Event.RMouse.GetX();
+	int my = Event.RMouse.GetY();
+	int lim = WINDOW_WIDTH - 171;
+	int col = 0;
+	if (ok) {
+		col = BLACK;
+	}
+	else {
+		col = RED;
+	}
+	if (Event.LMouse.GetOn(x - 1, y - 1, x + GRID, y + GRID)) {
+		if (mx < lim) {
+			DrawBox(mx, my, mx + 155, my + saData.reqL[type] * 25 + 5, LIGHTYELLOW, true);
+			for (int i = 0; i < saData.reqL[type]; i++) {
+				DrawFormatString(mx + 5, my + 5 + i * 25, col, "%s", saData.req[type][i]);
+			}
+		}
+		else {
+			DrawBox(lim, my, lim + 155, my + saData.reqL[type] * 25 + 5, LIGHTYELLOW, true);
+			for (int i = 0; i < saData.reqL[type]; i++) {
+				DrawFormatString(lim + 5, my + 5 + i * 25, col, "%s", saData.req[type][i]);
+			}
+		}
+	}
+}
+
+
+bool SFoundBox::CheckTEnough(ETown type){
 	for(int i = 0; i < RESOURCES; i++){
 		if (townInfo.resource[i] < tData.cost[type][NEW][i]){
 			return false;
@@ -132,7 +222,7 @@ void SFoundBox::PutTB(int x, int y, ETown type){
 		}
 	}
 
-	if (CheckEnough(type)){
+	if (CheckTEnough(type)){
 		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + GRID, y + GRID)){
 			town = type;
 			mode = EST;
@@ -158,7 +248,7 @@ void SFoundBox::DrawTData(int x, int y, ETown type){
 	//DrawFormatString(x + I_SIZE + 5, y + (i + RESOURCES) * I_SIZE + 2, BLACK, "%d", tData.trade[type][NEW][i]);
 }
 
-void SFoundBox::DrawFB(int money/*, EMineral mineral*/){
+void SFoundBox::DrawFB(int money/*, EMineral mineral*/) {
 	g_boxF.Draw(WINDOW_WIDTH - WINDOW_HEIGHT, 0);
 	DrawIB();
 
@@ -199,33 +289,54 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/){
 		break;
 	}
 
-	if (townInfo.towns < townInfo.townMax){
-		switch (terrain){
+	if (townInfo.towns < townInfo.townMax) {
+		switch (terrain) {
 		case PLAIN:
-			PutTB(470, 100, FARM);
-			PutTB(670, 100, COMM);
-			PutTB(390, 270, PAS_S);
-			PutTB(570, 270, PAS_C);
-			PutTB(750, 270, PAS_P);
+
+			if (spArea) {
+				g_naBut.Draw(340, 87);
+				if (!open && Event.LMouse.GetClick(340, 87, 340 + 105, 87 + 105)) {
+					spArea = false;
+				}
+				DrawString(400, 30, "絵にカーソルを合わせると条件を見られます", BLACK);
+				for (int i = 1; i <= SP_AREAS; i++) {
+					PutSAB(430 + 130 * (i % 4) - GRID / 2, 130 * (i / 4 + 1), i);
+				}
+				for (int i = 1; i <= SP_AREAS; i++) {
+					DrawSAReq(430 + 130 * (i % 4) - GRID / 2, 130 * (i / 4 + 1), i, spAAble[i]);
+				}
+			}
+			else {
+				g_saBut.Draw(340, 87);
+				if (!open && Event.LMouse.GetClick(340, 87, 340 + 105, 87 + 105)) {
+					spArea = true;
+				}
+				PutTB(570, 100, FARM);
+				PutTB(750, 100, COMM);
+				PutTB(390, 270, PAS_S);
+				PutTB(570, 270, PAS_C);
+				PutTB(750, 270, PAS_P);
+			}
+
 			break;
 
 		case FOREST:
 			PutTB(540, 120, F_VIL);
 			break;
 
-		/*case HILL:
+			/*case HILL:
 			switch (mineral) {
 			case GOLD:
-				PutButton(540, 120, MINE_G, money);
-				break;
+			PutButton(540, 120, MINE_G, money);
+			break;
 
 			case IRON:
-				PutButton(540, 120, MINE_I, money);
-				break;
+			PutButton(540, 120, MINE_I, money);
+			break;
 
 			default:
-				PutButton(540, 120, MINE_S, money);
-				break;
+			PutButton(540, 120, MINE_S, money);
+			break;
 			}
 			break;*/
 
@@ -259,7 +370,8 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/){
 			if (Event.LMouse.GetClick(449, 464, 550, 515) && !open) {
 				mode = CUT;
 			}
-		}else{
+		}
+		else {
 			DrawString(530, 522, "50", RED);
 		}
 	}
@@ -273,6 +385,7 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/){
 	if (pasture[2]) {
 		PutPB(730, 460, 2);
 	}
+	
 
 	open = false;
 }

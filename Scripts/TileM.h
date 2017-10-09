@@ -29,6 +29,7 @@ const int LR_END = 1; //左右の端
 const int R_DIR = 6;
 const int MNR_TYPE = 3; //鉱産資源の種類
 const int ONLY = 1;
+const int SP_AREAS = 5;
 
 enum ETerrain{
 	PLAIN, FOREST, HILL_S, HILL_G, HILL_I, RIVER
@@ -55,7 +56,7 @@ enum EInfo{
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P, BLD_SA
 };
 
 enum ETDType{
@@ -129,6 +130,17 @@ struct SPastureData {
 	int goods[3];
 };
 
+struct SSpAreaData {
+	SSpAreaData();
+
+	char name[SP_AREAS + 1][100];
+	bool rPType[SP_AREAS + 1][TOWNS + 1];
+	int reqPop[SP_AREAS + 1];
+	int cost[SP_AREAS + 1][RESOURCES];
+	int reqL[SP_AREAS + 1];
+	char req[SP_AREAS + 1][5][100];
+};
+
 struct STile{
 	STile();
 
@@ -146,6 +158,7 @@ struct STile{
 	bool connect[BLOCKS_X * BLOCKS_Y];
 	double buf[RESOURCES + 1];
 	int devLim;
+	int saNum;
 	STownData tData;
 	SBuildingData bData;
 	SPastureData pData;
@@ -169,6 +182,7 @@ struct STown /*地域全体*/ {
 	int towns;
 	int townMax;
 	bool onlyOne[ONLY];
+	int tTypePop[TOWNS + 1];
 
 	void Set();
 };
@@ -190,6 +204,7 @@ struct SInfoBox{
 	static CPicture g_build;
 	static CPicture g_demolish;
 	static CPicture g_mineral;
+	static CPicture g_sArea;
 	STownData tData;
 	SBuildingData bData;
 
@@ -200,15 +215,25 @@ struct SFoundBox :public SInfoBox{
 	static CPicture g_boxF;
 	static CPicture g_cbut;
 	static CPicture g_pasture;
+	static CPicture g_saBut;
+	static CPicture g_naBut;
 	bool cut;
 	bool pasture[3];
+	bool spArea;
 	SPastureData pData;
+	SSpAreaData saData;
+	bool spAAble[SP_AREAS + 1];
 
 	SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p);
 	ETown town; //Managerで使う（引数とは別物）
 	int pType;
+	int saType;
 	ETerrain terrain;
-	bool CheckEnough(ETown type);
+	bool CheckTEnough(ETown type);
+	bool CheckSAEnough(int type);
+	bool CheckSpAAble(int num);
+	void DrawSAReq(int x, int y, int type, bool ok);
+	void PutSAB(int x, int y, int type);
 	void PutTB(int x, int y, ETown type);
 	void PutPB(int x, int y, int type);
 	void DrawTData(int x, int y, ETown type);
@@ -312,6 +337,8 @@ private:
 	static CPicture g_tBut; //trade
 	static CPicture g_rBut; //region
 	static CPicture g_bBut; //buy
+	static CPicture g_sArea;
+	static CPicture g_starve;
 
 	STownData tData;
 	SBuildingData bData;
@@ -319,6 +346,7 @@ private:
 	SSpBuildingData sbData;
 	SGoodsData gData;
 	SPastureData pData;
+	SSpAreaData saData;
 	STile tile[BLOCKS_X * BLOCKS_Y];//0 1
 									//2 3
 	STown town;
@@ -328,6 +356,7 @@ private:
 	SRiverBox *rbox;
 	STradeBox *gbox;
 	SBuyBox *bbox;
+	CData *data;
 
 	EInfo boxStatus;
 	bool openInfo;
@@ -344,7 +373,7 @@ private:
 	void ReadData();
 
 public:
-	CTileManager(){};
+	CTileManager();
 	void Set();
 	void Draw();
 	void OpenInfo();
