@@ -49,13 +49,15 @@ CPicture SFoundBox::g_cbut;
 CPicture SFoundBox::g_pasture;
 CPicture SFoundBox::g_saBut;
 CPicture SFoundBox::g_naBut;
+CPicture SFoundBox::g_search;
 
-SFoundBox::SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p){
+SFoundBox::SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p, bool sFlag){
 	terrain = type;
 	townInfo = town;
 	pType = 0;
 	saType = 0;
 	cut = cFlag;
+	search = sFlag;
 	pasture[0] = pas_s;
 	pasture[1] = pas_c;
 	pasture[2] = pas_p;
@@ -70,6 +72,7 @@ SFoundBox::SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas
 	g_pasture.Load("Chikuwa3/Pasture.png", TERRAINS, 3, GRID, GRID, TERRAINS * 3);
 	g_saBut.Load("Chikuwa3/SaButton.png");
 	g_naBut.Load("Chikuwa3/NaButton.png");
+	g_search.Load("Chikuwa3/Search.png");
 }
 
 bool SFoundBox::CheckSpAAble(int n) {
@@ -342,6 +345,21 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/) {
 
 		case HILL_S:
 			PutTB(540, 120, MINE_S);
+
+			if (search) {
+				g_search.Draw(450, 465);
+				DrawString(445, 522, "コスト", BLACK);
+				g_resource.Draw(505, 520, MONEY);
+				if (money >= 80) {
+					DrawString(530, 522, "80", BLACK);
+					if (Event.LMouse.GetClick(449, 464, 550, 515) && !open) {
+						mode = SEARCH;
+					}
+				}
+				else {
+					DrawString(530, 522, "80", RED);
+				}
+			}
 			break;
 
 		case HILL_G:
@@ -538,10 +556,10 @@ void STownBox::PutDGButton(int x, int y/*, int lv*/){
 void STownBox::DrawBuildings(int x, int y, int build){
 	int mx = Event.RMouse.GetX();
 	int my = Event.RMouse.GetY();
-	int lim = WINDOW_WIDTH - 221;
+	int lim = WINDOW_WIDTH - 241;
 	if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
 		if (mx < lim){
-			DrawBox(mx, my, mx + 205, my + 160, LIGHTYELLOW, true);
+			DrawBox(mx, my, mx + 225, my + 160, LIGHTYELLOW, true);
 
 			DrawFormatString(mx + 5, my + 5, BLACK, "%s", bData.name[tileInfo.town][build]);
 			DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
@@ -578,7 +596,7 @@ void STownBox::DrawBuildings(int x, int y, int build){
 			}
 		}
 		else {
-			DrawBox(lim, my, lim + 205, my + 160, LIGHTYELLOW, true);
+			DrawBox(lim, my, lim + 225, my + 160, LIGHTYELLOW, true);
 			
 			DrawFormatString(lim + 5, my + 5, BLACK, "%s", bData.name[tileInfo.town][build]);
 			DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
@@ -653,11 +671,11 @@ void STownBox::PutBuildingButton(int x, int y, int bNum, bool isBuilt){
 void STownBox::DrawSBuildings(int x, int y, int build, bool popReq){
 	int mx = Event.RMouse.GetX();
 	int my = Event.RMouse.GetY();
-	int lim = WINDOW_WIDTH - 231;
+	int lim = WINDOW_WIDTH - 261;
 	int l = 0;
 	if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
 		if (mx < lim){
-			DrawBox(mx, my, mx + 215, my + 180, LIGHTYELLOW, true);
+			DrawBox(mx, my, mx + 245, my + 180, LIGHTYELLOW, true);
 
 			DrawFormatString(mx + 5, my + 5, BLACK, "%s", sbData.name[build]);
 			DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
@@ -688,7 +706,7 @@ void STownBox::DrawSBuildings(int x, int y, int build, bool popReq){
 			DrawFormatString(mx + 5, my + 15 + I_SIZE * (6 + l), BLACK, "%s", sbData.exp[build]);
 		}
 		else {
-			DrawBox(lim, my, lim + 215, my + 180, LIGHTYELLOW, true);
+			DrawBox(lim, my, lim + 245, my + 180, LIGHTYELLOW, true);
 			
 			DrawFormatString(lim + 5, my + 5, BLACK, "%s", sbData.name[build]);
 			DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
@@ -816,6 +834,20 @@ void STownBox::DrawTB(){
 		}
 		break;
 
+	case MINE_G:
+	case MINE_I:
+		g_SB.Draw(580, 120, 2);
+		if (!tileInfo.built[4]) {
+			g_shadeS.Draw(580, 120);
+		}
+
+	case MINE_S:
+		g_SB.Draw(430, 120, 3);
+		if (!tileInfo.built[3]){
+			g_shadeS.Draw(430, 120);
+		}
+		break;
+
 	default:
 		break;
 	}
@@ -851,6 +883,26 @@ void STownBox::DrawTB(){
 			}else{
 				DrawSBuildings(430, 120, 1, false);
 			}
+		}
+		break;
+
+	case MINE_G:
+	case MINE_I:
+		if (tileInfo.townLv >= 4) {
+			PutSpBuildButton(580, 120, 2, 4, tileInfo.built[4]);
+			DrawSBuildings(580, 120, 2, true);
+		}
+		else {
+			DrawSBuildings(580, 120, 2, false);
+		}
+
+	case MINE_S:
+		if (townInfo.maxMines >= 5){
+			PutSpBuildButton(430, 120, 3, 3, tileInfo.built[3]);
+			DrawSBuildings(430, 120, 3, true);
+		}
+		else{
+			DrawSBuildings(430, 120, 3, false);
 		}
 		break;
 
@@ -1087,19 +1139,18 @@ void STradeBox::DrawTB() {
 
 	DrawArrow(440, 40, 3);
 	DrawArrow(440, 160, 1);
-	DrawArrow(540, 160, 4);
+	DrawArrow(540, 160, 3);
 	DrawArrow(740, 160, 2);
-	DrawArrow(440, 280, 3);
-	DrawArrow(640, 280, 3);
+	DrawArrow(440, 280, 2);
+	DrawArrow(640, 280, 2);
 	DrawArrow(740, 280, 1);
 	DrawArrow(440, 400, 2);
 
 	g_goods.Draw(400, 510, 1);
 	DrawFormatString(450, 522, CYAN, "%d", townInfo.goodsPro[1]);
-	double a = int(100 - (double)townInfo.goodsPro[1]);
-	a /= 100;
-	DrawFormatString(500, 512, DARKGREEN, "交易収入:%.2lf × %.2lf = %.2lf", townInfo.exFin, 1 + (double)townInfo.goodsPro[1] / 10, townInfo.exSum);
-	DrawFormatString(500, 537, RED, "交易支出:%.2lf × %.2lf = %.2lf", townInfo.inFin, a, townInfo.inSum);
+	double a = 1.0 - ((double)townInfo.goodsPro[1]) / 100;
+	DrawFormatString(500, 512, DARKGREEN, "交易収入:%.2lf × %.2lf = %.2lf", townInfo.exSum, 1 + ((double)townInfo.goodsPro[1]) / 100, townInfo.exFin);
+	DrawFormatString(500, 537, RED, "交易支出:%.2lf × %.2lf = %.2lf", townInfo.inSum, a * 2.5, townInfo.inFin);
 
 	open = false;
 }

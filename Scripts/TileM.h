@@ -18,7 +18,7 @@ const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int R_BUILDS = 3;
-const int SP_BUILDS = 2;
+const int SP_BUILDS = 4;
 const int RESOURCES = 4;
 const int TERRAINS = 6;
 const int GOODS = 20;
@@ -56,7 +56,7 @@ enum EInfo{
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P, BLD_SA
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P, BLD_SA, SEARCH
 };
 
 enum ETDType{
@@ -156,9 +156,12 @@ struct STile{
 	int goods[GOODS];
 	bool fac[1];
 	bool connect[BLOCKS_X * BLOCKS_Y];
-	double buf[RESOURCES + 1];
+	double buf[RESOURCES];
 	int devLim;
 	int saNum;
+	int adjRB[R_BUILDS];
+	bool adjSer;
+	int hidMin; //1:gold 2:iron
 	STownData tData;
 	SBuildingData bData;
 	SPastureData pData;
@@ -183,6 +186,7 @@ struct STown /*地域全体*/ {
 	int townMax;
 	bool onlyOne[ONLY];
 	int tTypePop[TOWNS + 1];
+	int maxMines;
 
 	void Set();
 };
@@ -217,14 +221,16 @@ struct SFoundBox :public SInfoBox{
 	static CPicture g_pasture;
 	static CPicture g_saBut;
 	static CPicture g_naBut;
+	static CPicture g_search;
 	bool cut;
+	bool search;
 	bool pasture[3];
 	bool spArea;
 	SPastureData pData;
 	SSpAreaData saData;
 	bool spAAble[SP_AREAS + 1];
 
-	SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p);
+	SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p, bool sFlag);
 	ETown town; //Managerで使う（引数とは別物）
 	int pType;
 	int saType;
@@ -368,7 +374,7 @@ private:
 
 	//void CheckConnect(int n);
 	void DrawRiver(int n);
-	void CheckAdjRB();
+	void CheckAdjB();
 	void WriteData();
 	void ReadData();
 
