@@ -18,10 +18,10 @@ const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int R_BUILDS = 3;
-const int SP_BUILDS = 4;
+const int SP_BUILDS = 5;
 const int RESOURCES = 4;
 const int TERRAINS = 6;
-const int GOODS = 20;
+const int GOODS = 21;
 const int TRADE = 2;
 const int STATS = 2;
 const int UD_END = 0; //上下の端
@@ -29,7 +29,7 @@ const int LR_END = 1; //左右の端
 const int R_DIR = 6;
 const int MNR_TYPE = 3; //鉱産資源の種類
 const int ONLY = 1;
-const int SP_AREAS = 5;
+const int SP_AREAS = 6;
 
 enum ETerrain{
 	PLAIN, FOREST, HILL_S, HILL_G, HILL_I, RIVER
@@ -52,7 +52,7 @@ enum ESta{
 };
 
 enum EInfo{
-	NO, FOUND, TOWN, RBUILD, T_DATA, BUY, PST
+	NO, FOUND, TOWN, RBUILD, T_DATA, BUY, PST, S_AREA
 };
 
 enum EMode{
@@ -139,6 +139,8 @@ struct SSpAreaData {
 	int cost[SP_AREAS + 1][RESOURCES];
 	int reqL[SP_AREAS + 1];
 	char req[SP_AREAS + 1][5][100];
+	int expL[SP_AREAS + 1];
+	char exp[SP_AREAS + 1][5][100];
 };
 
 struct STile{
@@ -159,6 +161,7 @@ struct STile{
 	double buf[RESOURCES];
 	int devLim;
 	int saNum;
+	int saLv;
 	int adjRB[R_BUILDS];
 	bool adjSer;
 	int hidMin; //1:gold 2:iron
@@ -187,6 +190,10 @@ struct STown /*地域全体*/ {
 	bool onlyOne[ONLY];
 	int tTypePop[TOWNS + 1];
 	int maxMines;
+	int foodMax;
+	int cPas;
+	int foodCon;
+	bool spFarm;
 
 	void Set();
 };
@@ -213,6 +220,7 @@ struct SInfoBox{
 	SBuildingData bData;
 
 	void DrawIB();
+	void I_UpDate();
 };
 
 struct SFoundBox :public SInfoBox{
@@ -245,6 +253,7 @@ struct SFoundBox :public SInfoBox{
 	void DrawTData(int x, int y, ETown type);
 	void DrawPData(int x, int y, int type);
 	void DrawFB(int money/*, EMineral mineral*/);
+	void UpDate(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas_c, bool pas_p, bool sFlag);
 };
 
 struct STownBox :public SInfoBox{
@@ -274,6 +283,7 @@ struct STownBox :public SInfoBox{
 	void PutBuildingButton(int x, int y, int bNum, bool isBuilt);
 	void PutSpBuildButton(int x, int y, int bNum, int tbNum, bool isBuilt);
 	void DrawTB();
+	void UpDate(STown town, STile tile);
 };
 
 struct SPastureBox :public SInfoBox {
@@ -292,6 +302,8 @@ struct SPastureBox :public SInfoBox {
 struct SRiverBox :public SInfoBox{
 	static CPicture g_boxR;
 	static CPicture g_RB;
+	static CPicture g_buildL;
+	static CPicture g_demoL;
 	SRBuildingData rbData;
 
 	STile tileInfo;
@@ -301,6 +313,7 @@ struct SRiverBox :public SInfoBox{
 	void DrawRB(ETown u, ETown d, ETown l, ETown r);
 	void PutRBButton(int x, int y, int bNum, bool isBuilt);
 	void DrawDataBox(int x, int y, int bNum);
+	void UpDate(STown town, STile tile);
 };
 
 struct STradeBox :public SInfoBox {
@@ -324,6 +337,17 @@ struct SBuyBox :public SInfoBox {
 	SBuyBox(STown town);
 	void DrawBB(int money);
 	void PutBuyButton(int x, int y, int trade, EResource type, int c, int a, int money);
+};
+
+struct SSpABox :public SInfoBox {
+	static CPicture g_boxs;
+	static CPicture g_lvUp;
+	STile tileInfo;
+	SSpAreaData saData;
+
+	SSpABox(STown town, STile tile);
+	void DrawSB();
+	void UpDate(STown town, STile tile);
 };
 
 class CTileManager{
@@ -360,6 +384,7 @@ private:
 	STownBox *tbox;
 	SPastureBox *pbox;
 	SRiverBox *rbox;
+	SSpABox *sbox;
 	STradeBox *gbox;
 	SBuyBox *bbox;
 	CData *data;
@@ -377,6 +402,7 @@ private:
 	void CheckAdjB();
 	void WriteData();
 	void ReadData();
+	void UDData();
 
 public:
 	CTileManager();
