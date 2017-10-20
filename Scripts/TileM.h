@@ -18,17 +18,18 @@ const int TLVS = 3;
 const int TD_TYPES = 2;
 const int BUILDINGS = 3;
 const int R_BUILDS = 3;
-const int SP_BUILDS = 5;
+const int SP_BUILDS = 6;
 const int RESOURCES = 4;
 const int TERRAINS = 6;
 const int GOODS = 21;
+const int ITEMS = 2;
 const int TRADE = 2;
 const int STATS = 2;
 const int UD_END = 0; //上下の端
 const int LR_END = 1; //左右の端
 const int R_DIR = 6;
 const int MNR_TYPE = 3; //鉱産資源の種類
-const int ONLY = 1;
+const int ONLY = 2;
 const int SP_AREAS = 6;
 
 enum ETerrain{
@@ -56,7 +57,7 @@ enum EInfo{
 };
 
 enum EMode{
-	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P, BLD_SA, SEARCH
+	KEEP, CLOSE, EST, REMV, DEV, DG, BUILD, DEMO, SBUILD, CUT, BLD_P, BLD_SA, SEARCH, USE, END_USE
 };
 
 enum ETDType{
@@ -72,7 +73,7 @@ enum EMineral {
 };
 
 enum EOnly {
-	T_HALL
+	T_HALL, COURT
 };
 
 struct STownData{
@@ -84,6 +85,7 @@ struct STownData{
 	//int trade[TOWNS][TD_TYPES][TRADE];
 	int goods[TOWNS + 1][TD_TYPES];
 	int trade[TOWNS + 1][TD_TYPES];
+	int bufItem[TOWNS + 1];
 };
 
 struct SBuildingData{
@@ -165,6 +167,8 @@ struct STile{
 	int adjRB[R_BUILDS];
 	bool adjSer;
 	int hidMin; //1:gold 2:iron
+	bool itemUse;
+	int itemCon[ITEMS];
 	STownData tData;
 	SBuildingData bData;
 	SPastureData pData;
@@ -179,6 +183,7 @@ struct STown /*地域全体*/ {
 	int resource[RESOURCES];
 	int goodsPro[GOODS]; //Production
 	int goodsCon[GOODS]; //Consumption
+	int itemCon[ITEMS];
 	double exSum; //export
 	double inSum; //inport
 	double exFin;
@@ -263,6 +268,7 @@ struct STownBox :public SInfoBox{
 	static CPicture g_lvDn;
 	static CPicture g_demoL[2];
 	static CPicture g_SB;
+	static CPicture g_item;
 
 	STownBox(STown town, STile tile);
 	STile tileInfo;
@@ -276,6 +282,7 @@ struct STownBox :public SInfoBox{
 	void PutRemoveButton(int x, int y);
 	void DrawDev(int x, int y/*, int lv*/);
 	void PutDevButton(int x, int y/*, int lv*/);
+	void PutItemB(int x, int y, int type);
 	void DrawDG(int x, int y/*, int lv*/);
 	void PutDGButton(int x, int y/*, int lv*/);
 	void DrawBuildings(int x, int y, int build);
@@ -346,6 +353,8 @@ struct SSpABox :public SInfoBox {
 	SSpAreaData saData;
 
 	SSpABox(STown town, STile tile);
+	bool CheckDAble(int type);
+	void PutDevB(int x, int y);
 	void DrawSB();
 	void UpDate(STown town, STile tile);
 };
@@ -369,6 +378,7 @@ private:
 	static CPicture g_bBut; //buy
 	static CPicture g_sArea;
 	static CPicture g_starve;
+	static CPicture g_item;
 
 	STownData tData;
 	SBuildingData bData;

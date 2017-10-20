@@ -380,21 +380,6 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/) {
 
 			case HILL_S:
 				PutTB(540, 120, MINE_S);
-
-				if (search) {
-					g_search.Draw(450, 465);
-					DrawString(445, 522, "コスト", BLACK);
-					g_resource.Draw(505, 520, MONEY);
-					if (money >= 80) {
-						DrawString(530, 522, "80", BLACK);
-						if (Event.LMouse.GetClick(449, 464, 550, 515) && !open) {
-							mode = SEARCH;
-						}
-					}
-					else {
-						DrawString(530, 522, "80", RED);
-					}
-				}
 				break;
 
 			case HILL_G:
@@ -427,6 +412,21 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/) {
 		}
 		else {
 			DrawString(530, 522, "50", RED);
+		}
+	}
+	
+	if (search) {
+		g_search.Draw(450, 465);
+		DrawString(445, 522, "コスト", BLACK);
+		g_resource.Draw(505, 520, MONEY);
+		if (money >= 80) {
+			DrawString(530, 522, "80", BLACK);
+			if (Event.LMouse.GetClick(449, 464, 550, 515) && !open) {
+				mode = SEARCH;
+			}
+		}
+		else {
+			DrawString(530, 522, "80", RED);
 		}
 	}
 
@@ -469,6 +469,7 @@ CPicture STownBox::g_lvUp;
 CPicture STownBox::g_lvDn;
 CPicture STownBox::g_demoL[2];
 CPicture STownBox::g_SB;
+CPicture STownBox::g_item;
 
 STownBox::STownBox(STown town, STile tile){
 	//devLv = 0;
@@ -482,6 +483,7 @@ STownBox::STownBox(STown town, STile tile){
 	g_demoL[0].Load("Chikuwa3/Demo_L.png");
 	g_demoL[1].Load("Chikuwa3/AskDL.png");
 	g_SB.Load("Chikuwa3/SpBuildings.png", SP_BUILDS, 1, B_SIZE, B_SIZE, SP_BUILDS);
+	g_item.Load("Chikuwa3/Items.png", ITEMS, 1, G_SIZE, G_SIZE, ITEMS);
 }
 
 void STownBox::PutRemoveButton(int x, int y){
@@ -617,6 +619,28 @@ void STownBox::PutDGButton(int x, int y/*, int lv*/){
 		if (!open && Event.LMouse.GetClick(x - 1, y - 1, x + 50, y + 50)){
 			mode = DG;
 			//devLv = lv;
+		}
+	}
+}
+
+void STownBox::PutItemB(int x, int y, int type) {
+	g_item.Draw(x, y, type);
+
+	if (tileInfo.itemUse) {
+		if (Event.LMouse.GetClick(x - 1, y - 1, x + G_SIZE, y + G_SIZE)) {
+			mode = END_USE;
+		}
+	}
+	else {
+		g_shadeS.Draw(x, y);
+
+		if (townInfo.goodsPro[16] - townInfo.itemCon[type] >= 1) {
+			if (Event.LMouse.GetClick(x - 1, y - 1, x + G_SIZE, y + G_SIZE)) {
+				mode = USE;
+			}
+		}
+		else {
+			DrawString(x, y + G_SIZE + 5, "不足", RED);
 		}
 	}
 }
@@ -931,6 +955,13 @@ void STownBox::DrawTB(){
 		if (!tileInfo.built[3] && !townInfo.onlyOne[T_HALL]){
 			g_shadeS.Draw(430, 120);
 		}
+
+		if (!townInfo.onlyOne[COURT] || tileInfo.built[4]) {
+			g_SB.Draw(580, 120, 5);
+		}
+		if (!tileInfo.built[4] && !townInfo.onlyOne[COURT]) {
+			g_shadeS.Draw(580, 120);
+		}
 		break;
 
 	case MINE_G:
@@ -956,11 +987,21 @@ void STownBox::DrawTB(){
 	DrawBuildings(730, 60, 2);
 	
 	if (tileInfo.townLv + 1 < tileInfo.devLim){ 
-		DrawDev(710 + GRID + 5, 270/*, tileInfo.townLv + 1*/);
-		PutDevButton(710, 270/*, tileInfo.townLv + 1*/);
+		DrawDev(670 + GRID + 5, 270/*, tileInfo.townLv + 1*/);
+		PutDevButton(670, 270/*, tileInfo.townLv + 1*/);
+
+		DrawString(800, 255, "道具の活用", BLACK);
+		if (tData.bufItem[tileInfo.town] != 0) {
+			PutItemB(820, 280, tData.bufItem[tileInfo.town] - 1);
+		}
 	}
 	else {
-		DrawString(660, 300, "これ以上開発できません", BLACK);
+		DrawString(660, 280, "これ以上開発できません", BLACK);
+
+		DrawString(710, 310, "道具の活用", BLACK);
+		if (tData.bufItem[tileInfo.town] != 0) {
+			PutItemB(730, 330, tData.bufItem[tileInfo.town] - 1);
+		}
 	}
 
 	bool flag = false;
@@ -988,6 +1029,16 @@ void STownBox::DrawTB(){
 				DrawSBuildings(430, 120, 1, true);
 			}else{
 				DrawSBuildings(430, 120, 1, false);
+			}
+		}
+
+		if (!townInfo.onlyOne[COURT]) {
+			if (townInfo.towns >= 10 && tileInfo.townLv >= 4) {
+				PutSpBuildButton(580, 120, 5, 4, tileInfo.built[4]);
+				DrawSBuildings(580, 120, 5, true);
+			}
+			else {
+				DrawSBuildings(580, 120, 5, false);
 			}
 		}
 		break;
@@ -1381,24 +1432,92 @@ SSpABox::SSpABox(STown town, STile tile) {
 	tileInfo = tile;
 }
 
+bool SSpABox::CheckDAble(int type) {
+	switch (type) {
+	case 6:
+		if (townInfo.tTypePop[PAS_S] + townInfo.tTypePop[PAS_C] + townInfo.tTypePop[PAS_P] >= tileInfo.saLv * 10 + 10 && townInfo.goodsPro[2] - townInfo.goodsCon[2] >= 7 + tileInfo.saLv) {
+			for (int i = 0; i < RESOURCES; i++) {
+				if (townInfo.resource[i] < saData.cost[6][i] / 2) {
+					return false;
+				}
+			}
+			return true;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return false;
+}
+
+void SSpABox::PutDevB(int x, int y) {
+	if (!open && Event.LMouse.GetClick(x + 1, y + 1, x + 50, y + 50)) {
+		mode = DEV;
+	}
+}
+
 void SSpABox::DrawSB() {
 	g_boxs.Draw(WINDOW_WIDTH - WINDOW_HEIGHT, 0);
 	DrawIB();
 
 	DrawFormatString(500, 50, BLACK, "%s", saData.name[tileInfo.saNum]);
+	DrawFormatString(520, 75, BLACK, "規模：%d", tileInfo.saLv + 1);
 	if (tileInfo.saNum == 6) {
-		DrawString(500, 75, "産出", BLACK);
-		g_goods.Draw(500, 100, 20);
-		/*DrawFormatString(500 + G_SIZE + 5, 111, BLACK, "%d", tileInfo.saLv + 1);
+		DrawString(500, 100, "産出", BLACK);
+		g_goods.Draw(500, 125, 20);
+		DrawFormatString(500 + G_SIZE + 5, 136, BLACK, "%d", tileInfo.saLv + 1);
 
-		g_lvUp.Draw(575, 400);
-		DrawString(450, 400, "条件", BLACK);*/
+		DrawString(600, 100, "消費", BLACK);
+		g_resource.Draw(600, 135, FOOD);
+		DrawFormatString(600 + I_SIZE + 5, 137, BLACK, "%d", tileInfo.saLv * 10 + 10);
+
+		if (tileInfo.saLv < 4) {
+			g_lvUp.Draw(575, 330);
+			if (CheckDAble(6)){
+				PutDevB(575, 330);
+			}
+
+			DrawString(450, 400, "条件", BLACK);
+			if (townInfo.tTypePop[PAS_S] + townInfo.tTypePop[PAS_C] + townInfo.tTypePop[PAS_P] >= 20 + (tileInfo.saLv + 1) * 5) {
+				DrawFormatString(450, 425, BLACK, "牧場町人口：%d", 20 + (tileInfo.saLv + 1) * 5);
+			}
+			else {
+				DrawFormatString(450, 425, RED, "牧場町人口：%d", 20 + (tileInfo.saLv + 1) * 5);
+			}
+			if (townInfo.goodsPro[2] - townInfo.goodsCon[2] >= 7 + tileInfo.saLv) {
+				DrawFormatString(450, 445, BLACK, "交易品目：小麦×%d", 7 + tileInfo.saLv);
+			}
+			else {
+				DrawFormatString(450, 445, RED, "交易品目：小麦×%d", 7 + tileInfo.saLv);
+			}
+
+			DrawString(610, 400, "コスト", BLACK);
+			for (int i = 0; i < RESOURCES; i++) {
+				g_resource.Draw(610, 400 + (i + 1) * I_SIZE, i);
+				int cost = saData.cost[6][i] / 2;
+				if (townInfo.resource[i] < cost) {
+					DrawFormatString(610 + I_SIZE + 5, 400 + (i + 1) * I_SIZE + 2, RED, "%d", cost);
+				}
+				else {
+					DrawFormatString(610 + I_SIZE + 5, 400 + (i + 1) * I_SIZE + 2, BLACK, "%d", cost);
+				}
+			}
+
+			DrawString(700, 400, "効果", BLACK);
+			g_goods.Draw(700, 425, 20);
+			DrawString(700 + G_SIZE + 5, 436, "+1", BLACK);
+			g_resource.Draw(700, 425 + G_SIZE + 5, FOOD);
+			DrawString(700 + I_SIZE + 5, 425 + G_SIZE + 7, "-10", BLACK);
+		}
 	}
 
 	open = false;
 }
 
 void SSpABox::UpDate(STown town, STile tile) {
+	I_UpDate();
 	townInfo = town;
 	tileInfo = tile;
 }
