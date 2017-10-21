@@ -332,10 +332,14 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/) {
 		}
 		DrawString(400, 30, "絵にカーソルを合わせると条件を見られます", BLACK);
 		for (int i = 1; i <= SP_AREAS; i++) {
-			PutSAB(430 + 130 * (i % 4) - GRID / 2, 130 * (i / 4 + 1), i);
+			if (!townInfo.onlyArea[i]) {
+				PutSAB(430 + 130 * (i % 4) - GRID / 2, 130 * (i / 4 + 1), i);
+			}
 		}
 		for (int i = 1; i <= SP_AREAS; i++) {
-			DrawSAReq(430 + 130 * (i % 4) - GRID / 2, 130 * (i / 4 + 1), i, spAAble[i]);
+			if (!townInfo.onlyArea[i]) {
+				DrawSAReq(430 + 130 * (i % 4) - GRID / 2, 130 * (i / 4 + 1), i, spAAble[i]);
+			}
 		}
 	}
 	else{
@@ -470,12 +474,14 @@ CPicture STownBox::g_lvDn;
 CPicture STownBox::g_demoL[2];
 CPicture STownBox::g_SB;
 CPicture STownBox::g_item;
+CPicture STownBox::g_search;
 
-STownBox::STownBox(STown town, STile tile){
+STownBox::STownBox(STown town, STile tile, bool sFlag){
 	//devLv = 0;
 	townInfo = town;
 	tileInfo = tile;
 	clickDemo = false;
+	search = sFlag;
 
 	g_boxT.Load("Chikuwa3/Box_T.png");
 	g_lvUp.Load("Chikuwa3/Dev.png");
@@ -484,6 +490,7 @@ STownBox::STownBox(STown town, STile tile){
 	g_demoL[1].Load("Chikuwa3/AskDL.png");
 	g_SB.Load("Chikuwa3/SpBuildings.png", SP_BUILDS, 1, B_SIZE, B_SIZE, SP_BUILDS);
 	g_item.Load("Chikuwa3/Items.png", ITEMS, 1, G_SIZE, G_SIZE, ITEMS);
+	g_search.Load("Chikuwa3/Search.png");
 }
 
 void STownBox::PutRemoveButton(int x, int y){
@@ -789,11 +796,11 @@ void STownBox::PutBuildingButton(int x, int y, int bNum, bool isBuilt){
 void STownBox::DrawSBuildings(int x, int y, int build, bool popReq){
 	int mx = Event.RMouse.GetX();
 	int my = Event.RMouse.GetY();
-	int lim = WINDOW_WIDTH - 261;
+	int lim = WINDOW_WIDTH - 291;
 	int l = 0;
 	if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
 		if (mx < lim){
-			DrawBox(mx, my, mx + 245, my + 180, LIGHTYELLOW, true);
+			DrawBox(mx, my, mx + 275, my + 180, LIGHTYELLOW, true);
 
 			DrawFormatString(mx + 5, my + 5, BLACK, "%s", sbData.name[build]);
 			DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
@@ -824,7 +831,7 @@ void STownBox::DrawSBuildings(int x, int y, int build, bool popReq){
 			DrawFormatString(mx + 5, my + 15 + I_SIZE * (6 + l), BLACK, "%s", sbData.exp[build]);
 		}
 		else {
-			DrawBox(lim, my, lim + 245, my + 180, LIGHTYELLOW, true);
+			DrawBox(lim, my, lim + 275, my + 180, LIGHTYELLOW, true);
 			
 			DrawFormatString(lim + 5, my + 5, BLACK, "%s", sbData.name[build]);
 			DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
@@ -899,31 +906,76 @@ void STownBox::DrawTB(){
 
 	DrawFormatString(415, 210, BLACK, "%s", tData.name[tileInfo.town]);
 	DrawFormatString(415, 235, BLACK, "都市人口:%d/%d", tileInfo.townLv + 1, tileInfo.devLim);
-	DrawString(440, 255, "産出", BLACK);
-	for (int i = 0; i < RESOURCES; i++){
-		g_resource.Draw(450, 275 + i * I_SIZE, i);
-		DrawFormatString(450 + I_SIZE + 5, 275 + i * I_SIZE + 2, BLACK, "%d", tileInfo.produce[i]);
-	}
-	/*for (int i = 0; i < TRADE; i++){
-		g_trade.Draw(425, 275 + (i + RESOURCES) * I_SIZE, i);
-		DrawFormatString(425 + I_SIZE + 5, 275 + (i + RESOURCES) * I_SIZE + 2, BLACK, "%d", tileInfo.trade[i]);
-	}*/
-	int count = 0, g[GOODS] = {};
-	for (int i = 1; i < GOODS; i++){
-		if (tileInfo.goods[i] > 0){
-			g[count] = i;
-			count++;
-		}
-	}
-
-	for (int i = 0; i < count; i++){
-		if (g[i] == 1) {
-			g_goods.Draw(316 + 282 / (count + 1) * (i + 1) - G_SIZE / 2, 275 + RESOURCES * I_SIZE, g[i]);
-			DrawFormatString(321 + 282 / (count + 1) * (i + 1) + G_SIZE / 2, 275 + RESOURCES * I_SIZE + 12, CYAN, "%d", tileInfo.goods[g[i]]);
+	if (search) {
+		g_search.Draw(350, 305);
+		DrawString(345, 362, "コスト", BLACK);
+		g_resource.Draw(405, 360, MONEY);
+		if (townInfo.resource[MONEY] >= 80) {
+			DrawString(430, 362, "80", BLACK);
+			if (Event.LMouse.GetClick(349, 304, 450, 355) && !open) {
+				mode = SEARCH;
+				search = false;
+			}
 		}
 		else {
-			g_goods.Draw(316 + 282 / (count + 1) * (i + 1) - G_SIZE / 2, 275 + RESOURCES * I_SIZE, g[i]);
-			DrawFormatString(321 + 282 / (count + 1) * (i + 1) + G_SIZE / 2, 275 + RESOURCES * I_SIZE + 12, BLACK, "%d", tileInfo.goods[g[i]]);
+			DrawString(430, 362, "80", RED);
+		}
+
+		DrawString(470, 255, "産出", BLACK);
+		for (int i = 0; i < RESOURCES; i++) {
+			g_resource.Draw(480, 275 + i * I_SIZE, i);
+			DrawFormatString(480 + I_SIZE + 5, 275 + i * I_SIZE + 2, BLACK, "%d", tileInfo.produce[i]);
+		}
+		/*for (int i = 0; i < TRADE; i++){
+		g_trade.Draw(425, 275 + (i + RESOURCES) * I_SIZE, i);
+		DrawFormatString(425 + I_SIZE + 5, 275 + (i + RESOURCES) * I_SIZE + 2, BLACK, "%d", tileInfo.trade[i]);
+		}*/
+		int count = 0, g[GOODS] = {};
+		for (int i = 1; i < GOODS; i++) {
+			if (tileInfo.goods[i] > 0) {
+				g[count] = i;
+				count++;
+			}
+		}
+
+		for (int i = 0; i < count; i++) {
+			if (g[i] == 1) {
+				g_goods.Draw(426 + 202 / (count + 1) * (i + 1) - G_SIZE / 2, 275 + RESOURCES * I_SIZE, g[i]);
+				DrawFormatString(431 + 202 / (count + 1) * (i + 1) + G_SIZE / 2, 275 + RESOURCES * I_SIZE + 12, CYAN, "%d", tileInfo.goods[g[i]]);
+			}
+			else {
+				g_goods.Draw(426 + 202 / (count + 1) * (i + 1) - G_SIZE / 2, 275 + RESOURCES * I_SIZE, g[i]);
+				DrawFormatString(431 + 202 / (count + 1) * (i + 1) + G_SIZE / 2, 275 + RESOURCES * I_SIZE + 12, BLACK, "%d", tileInfo.goods[g[i]]);
+			}
+		}
+	}
+	else {
+		DrawString(440, 255, "産出", BLACK);
+		for (int i = 0; i < RESOURCES; i++) {
+			g_resource.Draw(450, 275 + i * I_SIZE, i);
+			DrawFormatString(450 + I_SIZE + 5, 275 + i * I_SIZE + 2, BLACK, "%d", tileInfo.produce[i]);
+		}
+		/*for (int i = 0; i < TRADE; i++){
+			g_trade.Draw(425, 275 + (i + RESOURCES) * I_SIZE, i);
+			DrawFormatString(425 + I_SIZE + 5, 275 + (i + RESOURCES) * I_SIZE + 2, BLACK, "%d", tileInfo.trade[i]);
+		}*/
+		int count = 0, g[GOODS] = {};
+		for (int i = 1; i < GOODS; i++) {
+			if (tileInfo.goods[i] > 0) {
+				g[count] = i;
+				count++;
+			}
+		}
+
+		for (int i = 0; i < count; i++) {
+			if (g[i] == 1) {
+				g_goods.Draw(316 + 282 / (count + 1) * (i + 1) - G_SIZE / 2, 275 + RESOURCES * I_SIZE, g[i]);
+				DrawFormatString(321 + 282 / (count + 1) * (i + 1) + G_SIZE / 2, 275 + RESOURCES * I_SIZE + 12, CYAN, "%d", tileInfo.goods[g[i]]);
+			}
+			else {
+				g_goods.Draw(316 + 282 / (count + 1) * (i + 1) - G_SIZE / 2, 275 + RESOURCES * I_SIZE, g[i]);
+				DrawFormatString(321 + 282 / (count + 1) * (i + 1) + G_SIZE / 2, 275 + RESOURCES * I_SIZE + 12, BLACK, "%d", tileInfo.goods[g[i]]);
+			}
 		}
 	}
 
@@ -986,7 +1038,7 @@ void STownBox::DrawTB(){
 	DrawBuildings(580, 60, 1);
 	DrawBuildings(730, 60, 2);
 	
-	if (tileInfo.townLv + 1 < tileInfo.devLim){ 
+	if (tileInfo.townLv + 1 < tileInfo.devLim){
 		DrawDev(670 + GRID + 5, 270/*, tileInfo.townLv + 1*/);
 		PutDevButton(670, 270/*, tileInfo.townLv + 1*/);
 

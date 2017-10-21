@@ -270,8 +270,35 @@ void STile::SetProduce() {
 			}
 
 			if (itemUse) {
-				produce[i] *= 1.2;
-				itemCon[tData.bufItem[town] - 1] = 1;
+				switch (town) {
+				case FARM:
+					produce[i] *= 1.2;
+					itemCon[tData.bufItem[town] - 1] = 1;
+					break;
+
+				case F_VIL:
+					produce[i] *= 1.34;
+					itemCon[tData.bufItem[town] - 1] = 1;
+					break;
+
+				case MINE_S:
+					produce[i] *= 1.5;
+					itemCon[tData.bufItem[town] - 1] = 1;
+					break;
+
+				case MINE_G:
+					produce[i] *= 1.5;
+					itemCon[tData.bufItem[town] - 1] = 1;
+					break;
+
+				case MINE_I:
+					produce[i] *= 1.5;
+					itemCon[tData.bufItem[town] - 1] = 1;
+					break;
+
+				default:
+					break;
+				}
 			}
 
 			for (int j = 0; j < BUILDINGS; j++) {
@@ -398,6 +425,10 @@ void STown::Set(){
 	cPas = 0;
 	foodCon = 0;
 	spFarm = false;
+
+	for (int i = 0; i <= SP_AREAS; i++) {
+		onlyArea[i] = false;
+	}
 }
 
 CTileManager::CTileManager() {
@@ -819,6 +850,7 @@ void CTileManager::Set(){
 	infoNum = -1;
 	showTrade = false;
 	loaded = false;
+	turn = 1;
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS + 1, GRID, GRID, TOWNS + 1);
@@ -872,7 +904,7 @@ void CTileManager::OpenInfo(){
 							num = i + 1;
 						}
 					}
-					bool flag[4] = {};
+					bool flag[5] = {};
 					switch (num) {
 					case 0:
 						if (tile[infoNum].terrain == FOREST) {
@@ -941,7 +973,12 @@ void CTileManager::OpenInfo(){
 				}
 			}
 			else {
-				tbox = new STownBox(town, tile[infoNum]);
+				bool flag = false;
+				if (tile[infoNum].adjSer || (tile[infoNum].town == MINE_S && tile[infoNum].built[3] && tile[infoNum].hidMin != 3)) {
+					flag = true;
+				}
+
+				tbox = new STownBox(town, tile[infoNum], flag);
 				boxStatus = TOWN;
 			}
 		}
@@ -1198,6 +1235,31 @@ void CTileManager::CloseInfo(){
 			tbox->UpDate(town, tile[infoNum]);
 			break;
 
+		case SEARCH:
+			town.resource[MONEY] -= 80;
+			switch (tile[infoNum].hidMin) {
+			case 1:
+				tile[infoNum].terrain = HILL_G;
+				tile[infoNum].town = MINE_G;
+				tile[infoNum].built[0] = false;
+				tile[infoNum].built[2] = false;
+				break;
+
+			case 2:
+				tile[infoNum].terrain = HILL_I;
+				tile[infoNum].town = MINE_I;
+				tile[infoNum].built[0] = false;
+				tile[infoNum].built[2] = false;
+				break;
+
+			default:
+				tile[infoNum].hidMin = 3;
+				break;
+			}
+			UDData();
+			tbox->UpDate(town, tile[infoNum]);
+			break;
+
 		default:
 			break;
 		}
@@ -1401,7 +1463,7 @@ void CTileManager::CheckAdjB() {
 		if ((tile[i].town == MINE_S || tile[i].town == MINE_G || tile[i].town == MINE_I) && tile[i].built[3]) {
 			for (int j = 0; j < 4; j++) {
 				if (i % BLOCKS_X + dx[j] >= 0 && i % BLOCKS_X + dx[j] < BLOCKS_X && i / BLOCKS_X + dy[j] >= 0 && i / BLOCKS_X + dy[j] < BLOCKS_Y) {
-					if (tile[i + dx[j] + dy[j] * BLOCKS_X].terrain == HILL_S && tile[i + dx[j] + dy[j] * BLOCKS_X].town == 0 && tile[i + dx[j] + dy[j] * BLOCKS_X].hidMin != 3) {
+					if (tile[i + dx[j] + dy[j] * BLOCKS_X].terrain == HILL_S /*&& tile[i + dx[j] + dy[j] * BLOCKS_X].town == 0*/ && tile[i + dx[j] + dy[j] * BLOCKS_X].hidMin != 3) {
 						tile[i + dx[j] + dy[j] * BLOCKS_X].adjSer = true;
 					}
 				}
@@ -1546,6 +1608,10 @@ void CTileManager::Draw(){
 		for (int j = 0; j < ITEMS; j++) {
 			town.itemCon[j] += tile[i].itemCon[j];
 		}
+
+		if (tile[i].saNum != 0) {
+			town.onlyArea[tile[i].saNum] = true;
+		}
 	}
 
 	for (int i = 0; i < RESOURCES; i++){
@@ -1688,6 +1754,8 @@ void CTileManager::Draw(){
 	DrawString(50, 30, "[s]でセーブ", WHITE);
 	DrawString(50, 50, "[l]でロード", WHITE);
 
+	DrawFormatString(50,70,WHITE,"ターン：%d/100",turn);
+
 	ETown u = WILD, d = WILD, l = WILD, r = WILD;
 
 	loaded = false;
@@ -1758,6 +1826,7 @@ void CTileManager::Draw(){
 			//town.resource[MONEY] += town.trade[VALUE] * town.trade[POWER];
 			town.resource[MONEY] += town.trade;
 			town.resource[FOOD] -= town.foodCon;
+			turn++;
 			if (town.resource[FOOD] < 0) {
 				P none, box;
 				none.first = 0;
@@ -1773,8 +1842,8 @@ void CTileManager::Draw(){
 				std::sort(stv.begin(), stv.end());
 			}
 			while (town.resource[FOOD] < 0 && !stv.empty()) {
-				if (stv.operator[](0).first <= 0) {
-					int num = stv.operator[](0).second;
+				if (stv.operator[](stv.size() - 1).first <= 0) {
+					int num = stv.operator[](stv.size() - 1).second;
 					tile[num].town = WILD;
 					for (int i = 0; i < BUILDINGS + SP_BUILDS; i++) {
 						tile[num].built[i] = false;
@@ -1804,8 +1873,8 @@ void CTileManager::Draw(){
 					stv.erase(stv.begin());
 				}
 				else {
-					tile[stv.operator[](0).second].townLv--;
-					stv.operator[](0).first--;
+					tile[stv.operator[](stv.size() - 1).second].townLv--;
+					stv.operator[](stv.size() - 1).first--;
 				}
 				std::sort(stv.begin(), stv.end());
 				town.resource[FOOD]++;
@@ -1941,6 +2010,7 @@ void CTileManager::WriteData(){
 	for (int i = 0; i < RESOURCES; i++) {
 		data->Set(10000 + i, town.resource[i]);
 	}
+	data->Set(10000 + RESOURCES, turn);
 	data->WriteAll();
 }
 
@@ -1989,4 +2059,5 @@ void CTileManager::ReadData(){
 	for (int i = 0; i < RESOURCES; i++) {
 		town.resource[i] = data->GetInt(10000 + i);
 	}
+	turn = data->GetInt(10000 + RESOURCES);
 }

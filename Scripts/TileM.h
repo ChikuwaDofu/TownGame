@@ -199,6 +199,7 @@ struct STown /*’nˆæ‘S‘Ì*/ {
 	int cPas;
 	int foodCon;
 	bool spFarm;
+	bool onlyArea[SP_AREAS + 1];
 
 	void Set();
 };
@@ -269,8 +270,10 @@ struct STownBox :public SInfoBox{
 	static CPicture g_demoL[2];
 	static CPicture g_SB;
 	static CPicture g_item;
+	static CPicture g_search;
+	bool search;
 
-	STownBox(STown town, STile tile);
+	STownBox(STown town, STile tile, bool sFlag);
 	STile tileInfo;
 	SSpBuildingData sbData;
 	//int devLv;
@@ -406,6 +409,8 @@ private:
 	bool tflag[BLOCKS_X * BLOCKS_Y];
 	bool showTrade;
 	bool loaded;
+
+	int turn;
 
 	//void CheckConnect(int n);
 	void DrawRiver(int n);
