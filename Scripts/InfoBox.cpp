@@ -94,6 +94,12 @@ bool SFoundBox::CheckSpAAble(int n) {
 		}
 		break;
 
+	case 7:
+		if (townInfo.income[WOOD] < 45) {
+			return false;
+		}
+		break;
+
 	default:
 		break;
 	}
@@ -143,7 +149,7 @@ void SFoundBox::PutSAB(int x, int y, int type) {
 void SFoundBox::DrawSAReq(int x, int y, int type, bool ok) {
 	int mx = Event.RMouse.GetX();
 	int my = Event.RMouse.GetY();
-	int lim = WINDOW_WIDTH - 211;
+	int lim = WINDOW_WIDTH - 231;
 	int col = 0;
 	int fixY = 0;
 	if (saData.expL[type] > 0) {
@@ -157,7 +163,7 @@ void SFoundBox::DrawSAReq(int x, int y, int type, bool ok) {
 	}
 	if (Event.LMouse.GetOn(x - 1, y - 1, x + GRID, y + GRID)) {
 		if (mx < lim) {
-			DrawBox(mx, my, mx + 195, my + (saData.reqL[type] + saData.expL[type] + 1 + fixY) * 25 + 5, LIGHTYELLOW, true);
+			DrawBox(mx, my, mx + 215, my + (saData.reqL[type] + saData.expL[type] + 1 + fixY) * 25 + 5, LIGHTYELLOW, true);
 			DrawString(mx + 5, my + 5, "条件", BLACK);
 			for (int i = 0; i < saData.reqL[type]; i++) {
 				DrawFormatString(mx + 5, my + 30 + i * 25, col, "%s", saData.req[type][i]);
@@ -170,7 +176,7 @@ void SFoundBox::DrawSAReq(int x, int y, int type, bool ok) {
 			}
 		}
 		else {
-			DrawBox(lim, my, lim + 195, my + (saData.reqL[type] + saData.expL[type] + 1 + fixY) * 25 + 5, LIGHTYELLOW, true);
+			DrawBox(lim, my, lim + 215, my + (saData.reqL[type] + saData.expL[type] + 1 + fixY) * 25 + 5, LIGHTYELLOW, true);
 			DrawString(lim + 5, my + 5, "条件", BLACK);
 			for (int i = 0; i < saData.reqL[type]; i++) {
 				DrawFormatString(lim + 5, my + 30 + i * 25, col, "%s", saData.req[type][i]);
@@ -631,19 +637,34 @@ void STownBox::PutDGButton(int x, int y/*, int lv*/){
 }
 
 void STownBox::PutItemB(int x, int y, int type) {
-	g_item.Draw(x, y, type);
+	g_item.Draw(x, y, type - 1);
+	int g = 0;
+	switch (type) {
+	case 1:
+		g = 16;
+		break;
 
-	if (tileInfo.itemUse) {
+	case 2:
+
+		break;
+
+	default:
+		break;
+	}
+
+	if (tileInfo.itemUse[type]) {
 		if (Event.LMouse.GetClick(x - 1, y - 1, x + G_SIZE, y + G_SIZE)) {
 			mode = END_USE;
+			iNum = type;
 		}
 	}
 	else {
 		g_shadeS.Draw(x, y);
 
-		if (townInfo.goodsPro[16] - townInfo.itemCon[type] >= 1) {
+		if (townInfo.goodsPro[g] - townInfo.itemCon[type] >= 1) {
 			if (Event.LMouse.GetClick(x - 1, y - 1, x + G_SIZE, y + G_SIZE)) {
 				mode = USE;
+				iNum = type;
 			}
 		}
 		else {
@@ -793,73 +814,105 @@ void STownBox::PutBuildingButton(int x, int y, int bNum, bool isBuilt){
 	}	
 }
 
-void STownBox::DrawSBuildings(int x, int y, int build, bool popReq){
+void STownBox::DrawSBuildings(int x, int y, int build, bool popReq, bool ex){
 	int mx = Event.RMouse.GetX();
 	int my = Event.RMouse.GetY();
 	int lim = WINDOW_WIDTH - 291;
 	int l = 0;
-	if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
-		if (mx < lim){
-			DrawBox(mx, my, mx + 275, my + 180, LIGHTYELLOW, true);
+	if (ex) {
+		if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
+			if (mx < lim){
+				DrawBox(mx, my, mx + 275, my + 100, LIGHTYELLOW, true);
 
-			DrawFormatString(mx + 5, my + 5, BLACK, "%s", sbData.name[build]);
-			DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
-			for (int i = 0; i < RESOURCES; i++){
-				g_resource.Draw(mx + 5 + i * 55, my + I_SIZE * 2 + 5, i);
-				if (townInfo.resource[i] < sbData.cost[build][i]){
-					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", sbData.cost[build][i]);
+				DrawFormatString(mx + 5, my + 5, BLACK, "%s", sbData.name[build]);
+
+				if (sbData.onlyOne[build]){
+					DrawString(mx + 5, my + 10 + I_SIZE, "地域に一つだけ建てられる", BLACK);
+					l = 1;
 				}
-				else {
-					DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", sbData.cost[build][i]);
+
+				DrawString(mx + 5, my + 15 + I_SIZE * (1 + l), "効果", BLACK);
+				DrawFormatString(mx + 5, my + 15 + I_SIZE * (2 + l), BLACK, "%s", sbData.exp[build]);
+			}
+			else {
+				DrawBox(lim, my, lim + 275, my + 100, LIGHTYELLOW, true);
+			
+				DrawFormatString(lim + 5, my + 5, BLACK, "%s", sbData.name[build]);
+
+				if (sbData.onlyOne[build]){
+					DrawString(lim + 5, my + 10 + I_SIZE, "地域に１つだけ建てられる", BLACK);
+					l = 1;
 				}
-			}
-		
-			if (popReq){
-				DrawString(mx + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
-				DrawFormatString(mx + 5, my + 10 + I_SIZE * 4, BLACK, "%s", sbData.req[build]);
-			}else{
-				DrawString(mx + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
-				DrawFormatString(mx + 5, my + 10 + I_SIZE * 4, RED, "%s", sbData.req[build]);
-			}
 
-			if (sbData.onlyOne[build]){
-				DrawString(mx + 5, my + 10 + I_SIZE * 5, "地域に一つだけ建てられる", BLACK);
-				l = 1;
+				DrawString(lim + 5, my + 15 + I_SIZE * (1 + l), "効果", BLACK);
+				DrawFormatString(lim + 5, my + 15 + I_SIZE * (2 + l), BLACK, "%s", sbData.exp[build]);
 			}
-
-			DrawString(mx + 5, my + 15 + I_SIZE * (5 + l), "効果", BLACK);
-			DrawFormatString(mx + 5, my + 15 + I_SIZE * (6 + l), BLACK, "%s", sbData.exp[build]);
 		}
-		else {
-			DrawBox(lim, my, lim + 275, my + 180, LIGHTYELLOW, true);
-			
-			DrawFormatString(lim + 5, my + 5, BLACK, "%s", sbData.name[build]);
-			DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
-			for (int i = 0; i < RESOURCES; i++){
-				g_resource.Draw(lim + 5 + i * 55, my + I_SIZE * 2 + 5, i);
-				if (townInfo.resource[i] < sbData.cost[build][i]){
-					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", sbData.cost[build][i]);
-				}
-				else {
-					DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", sbData.cost[build][i]);
-				}
-			}
-			
-			if (popReq){
-				DrawString(lim + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
-				DrawFormatString(lim + 5, my + 10 + I_SIZE * 4, BLACK, "%s", sbData.req[build]);
-			}else{
-				DrawString(lim + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
-				DrawFormatString(lim + 5, my + 10 + I_SIZE * 4, RED, "%s", sbData.req[build]);
-			}
+	}
+	else {
+		if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)){
+			if (mx < lim){
+				DrawBox(mx, my, mx + 275, my + 180, LIGHTYELLOW, true);
 
-			if (sbData.onlyOne[build]){
-				DrawString(lim + 5, my + 10 + I_SIZE * 5, "地域に１つだけ建てられる", BLACK);
-				l = 1;
-			}
+				DrawFormatString(mx + 5, my + 5, BLACK, "%s", sbData.name[build]);
+				DrawString(mx + 5, my + I_SIZE + 5, "建設コスト", BLACK);
+				for (int i = 0; i < RESOURCES; i++){
+					g_resource.Draw(mx + 5 + i * 55, my + I_SIZE * 2 + 5, i);
+					if (townInfo.resource[i] < sbData.cost[build][i]){
+						DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", sbData.cost[build][i]);
+					}
+					else {
+						DrawFormatString(mx + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", sbData.cost[build][i]);
+					}
+				}
+		
+				if (popReq){
+					DrawString(mx + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
+					DrawFormatString(mx + 5, my + 10 + I_SIZE * 4, BLACK, "%s", sbData.req[build]);
+				}else{
+					DrawString(mx + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
+					DrawFormatString(mx + 5, my + 10 + I_SIZE * 4, RED, "%s", sbData.req[build]);
+				}
 
-			DrawString(lim + 5, my + 15 + I_SIZE * (5 + l), "効果", BLACK);
-			DrawFormatString(lim + 5, my + 15 + I_SIZE * (6 + l), BLACK, "%s", sbData.exp[build]);
+				if (sbData.onlyOne[build]){
+					DrawString(mx + 5, my + 10 + I_SIZE * 5, "地域に一つだけ建てられる", BLACK);
+					l = 1;
+				}
+
+				DrawString(mx + 5, my + 15 + I_SIZE * (5 + l), "効果", BLACK);
+				DrawFormatString(mx + 5, my + 15 + I_SIZE * (6 + l), BLACK, "%s", sbData.exp[build]);
+			}
+			else {
+				DrawBox(lim, my, lim + 275, my + 180, LIGHTYELLOW, true);
+			
+				DrawFormatString(lim + 5, my + 5, BLACK, "%s", sbData.name[build]);
+				DrawString(lim + 5, my + I_SIZE + 5, "建設コスト", BLACK);
+				for (int i = 0; i < RESOURCES; i++){
+					g_resource.Draw(lim + 5 + i * 55, my + I_SIZE * 2 + 5, i);
+					if (townInfo.resource[i] < sbData.cost[build][i]){
+						DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, RED, "%d", sbData.cost[build][i]);
+					}
+					else {
+						DrawFormatString(lim + 10 + I_SIZE + i * 55, my + I_SIZE * 2 + 7, BLACK, "%d", sbData.cost[build][i]);
+					}
+				}
+			
+				if (popReq){
+					DrawString(lim + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
+					DrawFormatString(lim + 5, my + 10 + I_SIZE * 4, BLACK, "%s", sbData.req[build]);
+				}else{
+					DrawString(lim + 5, my + 10 + I_SIZE * 3, "条件", BLACK);
+					DrawFormatString(lim + 5, my + 10 + I_SIZE * 4, RED, "%s", sbData.req[build]);
+				}
+
+				if (sbData.onlyOne[build]){
+					DrawString(lim + 5, my + 10 + I_SIZE * 5, "地域に１つだけ建てられる", BLACK);
+					l = 1;
+				}
+
+				DrawString(lim + 5, my + 15 + I_SIZE * (5 + l), "効果", BLACK);
+				DrawFormatString(lim + 5, my + 15 + I_SIZE * (6 + l), BLACK, "%s", sbData.exp[build]);
+			}
 		}
 	}
 }
@@ -895,6 +948,30 @@ void STownBox::PutSpBuildButton(int x, int y, int bNum, int tbNum, bool isBuilt)
 				mode = SBUILD;
 				buildNum = tbNum;
 				sBuildNum = bNum;
+			}
+		}
+	}
+}
+
+void STownBox::DrawItemInfo(int x, int y, int tNum, int iNum) {
+	int mx = Event.RMouse.GetX();
+	int my = Event.RMouse.GetY();
+	int lim = WINDOW_WIDTH - 241;
+	if (Event.LMouse.GetOn(x - 1, y - 1, x + B_SIZE, y + B_SIZE)) {
+		if (mx < lim) {
+			DrawBox(mx, my, mx + 225, my + tData.iExpL[tNum][iNum] * 20 + 30, LIGHTYELLOW, true);
+			DrawString(mx + 5, my + 5, "対象", BLACK);
+			for (int i = 0; i < tData.iExpL[tNum][iNum]; i++) {
+				DrawFormatString(mx + 5, my + 25 + 20 * i, BLACK, "%s", tData.iExp[tNum][iNum][i]);
+			}
+		}
+		else {
+			DrawBox(lim, my, lim + 225, my + tData.iExpL[tNum][iNum] * 20 + 30, LIGHTYELLOW, true);
+
+			DrawBox(lim, my, lim + 225, my + tData.iExpL[tNum][iNum] * 20 + 30, LIGHTYELLOW, true);
+			DrawString(lim + 5, my + 5, "対象", BLACK);
+			for (int i = 0; i < tData.iExpL[tNum][iNum]; i++) {
+				DrawFormatString(lim + 5, my + 25 + 20 * i, BLACK, "%s", tData.iExp[tNum][iNum][i]);
 			}
 		}
 	}
@@ -1042,17 +1119,45 @@ void STownBox::DrawTB(){
 		DrawDev(670 + GRID + 5, 270/*, tileInfo.townLv + 1*/);
 		PutDevButton(670, 270/*, tileInfo.townLv + 1*/);
 
-		DrawString(800, 255, "道具の活用", BLACK);
-		if (tData.bufItem[tileInfo.town] != 0) {
-			PutItemB(820, 280, tData.bufItem[tileInfo.town] - 1);
+		if (tData.bufItem[tileInfo.town][1] || tData.bufItem[tileInfo.town][2]) {
+			DrawString(800, 255, "道具の活用", BLACK);
+		}
+		if (tData.bufItem[tileInfo.town][1]) {
+			PutItemB(820, 280, 1);
+			if (tData.bufItem[tileInfo.town][2]) {
+				PutItemB(820 + G_SIZE, 280, 2);
+			}
+			DrawItemInfo(820, 280, (int)(tileInfo.town), 1);
+			if (tData.bufItem[tileInfo.town][2]) {
+				DrawItemInfo(820 + G_SIZE, 280, (int)(tileInfo.town), 2);
+			}
+		}
+		else if (tData.bufItem[tileInfo.town][2]) {
+			PutItemB(820, 280, 2);
+			DrawItemInfo(820, 280, (int)(tileInfo.town), 2);
 		}
 	}
 	else {
 		DrawString(660, 280, "これ以上開発できません", BLACK);
 
-		DrawString(710, 310, "道具の活用", BLACK);
-		if (tData.bufItem[tileInfo.town] != 0) {
-			PutItemB(730, 330, tData.bufItem[tileInfo.town] - 1);
+		if (tData.bufItem[tileInfo.town][1] || tData.bufItem[tileInfo.town][2]) {
+			DrawString(710, 310, "道具の活用", BLACK);
+		}
+		if (tData.bufItem[tileInfo.town][1]) {
+			if (tData.bufItem[tileInfo.town][2]) {
+				PutItemB(710, 330, 1);
+				PutItemB(750, 330, 2);
+				DrawItemInfo(710, 330, (int)(tileInfo.town), 1);
+				DrawItemInfo(750, 330, (int)(tileInfo.town), 2);
+			}
+			else {
+				PutItemB(730, 330, 1);
+				DrawItemInfo(730, 330, (int)(tileInfo.town), 1);
+			}
+		}
+		else if (tData.bufItem[tileInfo.town][2]) {
+			PutItemB(730, 330, 2);
+			DrawItemInfo(730, 330, (int)(tileInfo.town), 2);
 		}
 	}
 
@@ -1061,16 +1166,16 @@ void STownBox::DrawTB(){
 	case FARM:
 		if (/*townInfo.devSum >= 10 &&*/ tileInfo.townLv >= 4){
 			PutSpBuildButton(430, 120, 0, 3, tileInfo.built[3]);
-			DrawSBuildings(430, 120, 0, true);
+			DrawSBuildings(430, 120, 0, true, tileInfo.built[3]);
 		}else{
-			DrawSBuildings(430, 120, 0, false);
+			DrawSBuildings(430, 120, 0, false, tileInfo.built[3]);
 		}
 		if (tileInfo.townLv >= 7) {
 			PutSpBuildButton(580, 120, 4, 4, tileInfo.built[4]);
-			DrawSBuildings(580, 120, 4, true);
+			DrawSBuildings(580, 120, 4, true, tileInfo.built[4]);
 		}
 		else {
-			DrawSBuildings(580, 120, 4, false);
+			DrawSBuildings(580, 120, 4, false, tileInfo.built[4]);
 		}
 		break;
 
@@ -1078,20 +1183,26 @@ void STownBox::DrawTB(){
 		if (!townInfo.onlyOne[T_HALL]){
 			if (townInfo.towns >= 5 && tileInfo.townLv >= 4){
 				PutSpBuildButton(430, 120, 1, 3, tileInfo.built[3]);
-				DrawSBuildings(430, 120, 1, true);
+				DrawSBuildings(430, 120, 1, true, tileInfo.built[3]);
 			}else{
-				DrawSBuildings(430, 120, 1, false);
+				DrawSBuildings(430, 120, 1, false, tileInfo.built[3]);
 			}
+		}
+		else if (tileInfo.built[3]) {
+			DrawSBuildings(430, 120, 1, true, tileInfo.built[3]);
 		}
 
 		if (!townInfo.onlyOne[COURT]) {
 			if (townInfo.towns >= 10 && tileInfo.townLv >= 4) {
 				PutSpBuildButton(580, 120, 5, 4, tileInfo.built[4]);
-				DrawSBuildings(580, 120, 5, true);
+				DrawSBuildings(580, 120, 5, true, tileInfo.built[4]);
 			}
 			else {
-				DrawSBuildings(580, 120, 5, false);
+				DrawSBuildings(580, 120, 5, false, tileInfo.built[4]);
 			}
+		}
+		else if (tileInfo.built[4]) {
+			DrawSBuildings(580, 120, 5, false, tileInfo.built[4]);
 		}
 		break;
 
@@ -1099,19 +1210,19 @@ void STownBox::DrawTB(){
 	case MINE_I:
 		if (tileInfo.townLv >= 4 && tileInfo.built[0]) {
 			PutSpBuildButton(580, 120, 2, 4, tileInfo.built[4]);
-			DrawSBuildings(580, 120, 2, true);
+			DrawSBuildings(580, 120, 2, true, tileInfo.built[4]);
 		}
 		else {
-			DrawSBuildings(580, 120, 2, false);
+			DrawSBuildings(580, 120, 2, false, tileInfo.built[4]);
 		}
 
 	case MINE_S:
 		if (townInfo.maxMines >= 5){
 			PutSpBuildButton(430, 120, 3, 3, tileInfo.built[3]);
-			DrawSBuildings(430, 120, 3, true);
+			DrawSBuildings(430, 120, 3, true, tileInfo.built[3]);
 		}
 		else{
-			DrawSBuildings(430, 120, 3, false);
+			DrawSBuildings(430, 120, 3, false, tileInfo.built[3]);
 		}
 		break;
 
@@ -1389,7 +1500,7 @@ void STradeBox::DrawTB() {
 		DrawString(330, 120 + i * 120, "消費", RED);
 	}
 	for (int i = 2; i < GOODS; i++) {
-		if (i != 20 || townInfo.spFarm) {
+		if (i != 21 || townInfo.spFarm) {
 			int show = i - 2;
 			g_goods.Draw(390 + show % 5 * 100, 30 + show / 5 * 120, i);
 			DrawFormatString(392 + show % 5 * 100, 75 + show / 5 * 120, ORANGE, "%.2lf", gData.value[i]);
@@ -1497,6 +1608,15 @@ bool SSpABox::CheckDAble(int type) {
 		}
 		break;
 
+	case 7:
+		for (int i = 0; i < RESOURCES; i++) {
+			if (townInfo.resource[i] < saData.cost[7][i] / 2) {
+				return false;
+			}
+		}
+		return true;
+		break;
+
 	default:
 		break;
 	}
@@ -1518,7 +1638,7 @@ void SSpABox::DrawSB() {
 	DrawFormatString(520, 75, BLACK, "規模：%d", tileInfo.saLv + 1);
 	if (tileInfo.saNum == 6) {
 		DrawString(500, 100, "産出", BLACK);
-		g_goods.Draw(500, 125, 20);
+		g_goods.Draw(500, 125, 21);
 		DrawFormatString(500 + G_SIZE + 5, 136, BLACK, "%d", tileInfo.saLv + 1);
 
 		DrawString(600, 100, "消費", BLACK);
@@ -1558,10 +1678,40 @@ void SSpABox::DrawSB() {
 			}
 
 			DrawString(700, 400, "効果", BLACK);
-			g_goods.Draw(700, 425, 20);
+			g_goods.Draw(700, 425, 21);
 			DrawString(700 + G_SIZE + 5, 436, "+1", BLACK);
 			g_resource.Draw(700, 425 + G_SIZE + 5, FOOD);
 			DrawString(700 + I_SIZE + 5, 425 + G_SIZE + 7, "-10", BLACK);
+		}
+	}
+	if (tileInfo.saNum == 7) {
+		DrawString(500, 100, "産出", BLACK);
+		g_goods.Draw(500, 125, 20);
+		DrawFormatString(500 + G_SIZE + 5, 136, BLACK, "%d", min(tileInfo.saLv + 1, townInfo.forests));
+
+		DrawString(600, 100, "森林伐採", BLACK);
+		DrawFormatString(600, 135, BLACK, "１ターンに%dマス", min(tileInfo.saLv + 1, townInfo.forests));
+
+		if (tileInfo.townLv < 4) {
+			g_lvUp.Draw(575, 330);
+			if (CheckDAble(7)) {
+				PutDevB(575, 330);
+			}
+			DrawString(460, 400, "コスト", BLACK);
+			for (int i = 0; i < RESOURCES; i++) {
+				g_resource.Draw(460, 400 + (i + 1) * I_SIZE, i);
+				int cost = saData.cost[7][i] / 2;
+				if (townInfo.resource[i] < cost) {
+					DrawFormatString(460 + I_SIZE + 5, 400 + (i + 1) * I_SIZE + 2, RED, "%d", cost);
+				}
+				else {
+					DrawFormatString(460 + I_SIZE + 5, 400 + (i + 1) * I_SIZE + 2, BLACK, "%d", cost);
+				}
+			}
+			DrawString(550, 400, "効果", BLACK);
+			g_goods.Draw(550, 425, 20);
+			DrawString(550 + G_SIZE + 5, 436, "+1", BLACK);
+			DrawString(550, 430 + G_SIZE, "ターン毎の森林伐採 +1マス", BLACK);
 		}
 	}
 

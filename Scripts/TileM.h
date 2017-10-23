@@ -21,7 +21,7 @@ const int R_BUILDS = 3;
 const int SP_BUILDS = 6;
 const int RESOURCES = 4;
 const int TERRAINS = 6;
-const int GOODS = 21;
+const int GOODS = 22;
 const int ITEMS = 2;
 const int TRADE = 2;
 const int STATS = 2;
@@ -30,7 +30,7 @@ const int LR_END = 1; //左右の端
 const int R_DIR = 6;
 const int MNR_TYPE = 3; //鉱産資源の種類
 const int ONLY = 2;
-const int SP_AREAS = 6;
+const int SP_AREAS = 7;
 
 enum ETerrain{
 	PLAIN, FOREST, HILL_S, HILL_G, HILL_I, RIVER
@@ -85,7 +85,9 @@ struct STownData{
 	//int trade[TOWNS][TD_TYPES][TRADE];
 	int goods[TOWNS + 1][TD_TYPES];
 	int trade[TOWNS + 1][TD_TYPES];
-	int bufItem[TOWNS + 1];
+	bool bufItem[TOWNS + 1][ITEMS + 1];
+	int iExpL[TOWNS + 1][ITEMS + 1];
+	char iExp[TOWNS + 1][ITEMS + 1][5][100];
 };
 
 struct SBuildingData{
@@ -167,8 +169,8 @@ struct STile{
 	int adjRB[R_BUILDS];
 	bool adjSer;
 	int hidMin; //1:gold 2:iron
-	bool itemUse;
-	int itemCon[ITEMS];
+	bool itemUse[ITEMS + 1];
+	int itemCon[ITEMS + 1];
 	STownData tData;
 	SBuildingData bData;
 	SPastureData pData;
@@ -200,6 +202,7 @@ struct STown /*地域全体*/ {
 	int foodCon;
 	bool spFarm;
 	bool onlyArea[SP_AREAS + 1];
+	int forests;
 
 	void Set();
 };
@@ -279,6 +282,7 @@ struct STownBox :public SInfoBox{
 	//int devLv;
 	int buildNum;
 	int sBuildNum;
+	int iNum;
 	bool CheckDEnough();
 	bool CheckBEnough(int bNum);
 	bool CheckSBEnough(int bNum);
@@ -289,9 +293,10 @@ struct STownBox :public SInfoBox{
 	void DrawDG(int x, int y/*, int lv*/);
 	void PutDGButton(int x, int y/*, int lv*/);
 	void DrawBuildings(int x, int y, int build);
-	void DrawSBuildings(int x, int y, int build, bool popReq);
+	void DrawSBuildings(int x, int y, int build, bool popReq, bool ex);
 	void PutBuildingButton(int x, int y, int bNum, bool isBuilt);
 	void PutSpBuildButton(int x, int y, int bNum, int tbNum, bool isBuilt);
+	void DrawItemInfo(int x, int y, int tNum, int iNum);
 	void DrawTB();
 	void UpDate(STown town, STile tile);
 };

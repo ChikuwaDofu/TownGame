@@ -15,7 +15,7 @@ typedef std::pair<int, int> P;
 int now, nxt;
 int dx[4] = {0, 1, 0, -1}, dy[4] = {1, 0, -1, 0};
 //vector<int> v;
-vector<int> vec, res;
+vector<int> vec, res, frs;
 vector<P> stv;
 
 CPicture CTileManager::g_tile;
@@ -58,7 +58,47 @@ STownData::STownData(){
 				fscanf(f, "%d", &trade[i][j]);
 			}
 		}
-		fscanf(f, "%d", &bufItem[i]);
+		int buf = 0;
+		fscanf(f, "%d", &buf);
+		for (int j = 0; j <= ITEMS; j++) {
+			bufItem[i][j] = false;
+		}
+		switch (buf) {
+		case 1:
+			bufItem[i][1] = true;
+			fscanf(f, "%d", &iExpL[i][1]);
+			for (int j = 0; j < iExpL[i][1]; j++) {
+				fscanf(f, "%s", &iExp[i][1][j]);
+			}
+			iExpL[i][2] = 0;
+			break;
+
+		case 2:
+			bufItem[i][2] = true;
+			iExpL[i][1] = 0;
+			fscanf(f, "%d", &iExpL[i][2]);
+			for (int j = 0; j < iExpL[i][2]; j++) {
+				fscanf(f, "%s", &iExp[i][2][j]);
+			}
+			break;
+
+		case 3:
+			bufItem[i][1] = true;
+			bufItem[i][2] = true;
+			fscanf(f, "%d", &iExpL[i][1]);
+			for (int j = 0; j < iExpL[i][1]; j++) {
+				fscanf(f, "%s", &iExp[i][1][j]);
+			}
+			fscanf(f, "%d", &iExpL[i][2]);
+			for (int j = 0; j < iExpL[i][2]; j++) {
+				fscanf(f, "%s", &iExp[i][2][j]);
+			}
+			break;
+
+		default:
+			break;
+		}
+		
 	}
 	fclose(f);
 }
@@ -198,7 +238,9 @@ STile::STile(){
 	saNum = 0;
 	saLv = 0;
 	hidMin = 0;
-	itemUse = false;
+	for (int i = 1; i <= ITEMS; i++) {
+		itemUse[i] = false;
+	}
 	for (int i = 0; i < BUILDINGS + SP_BUILDS; i++){
 		built[i] = false;
 	}
@@ -269,42 +311,59 @@ void STile::SetProduce() {
 				itemCon[j] = 0;
 			}
 
-			if (itemUse) {
+			if (itemUse[1]) {
 				switch (town) {
 				case FARM:
 					produce[i] *= 1.2;
-					itemCon[tData.bufItem[town] - 1] = 1;
 					break;
 
 				case F_VIL:
 					produce[i] *= 1.34;
-					itemCon[tData.bufItem[town] - 1] = 1;
 					break;
 
 				case MINE_S:
 					produce[i] *= 1.5;
-					itemCon[tData.bufItem[town] - 1] = 1;
 					break;
 
 				case MINE_G:
 					produce[i] *= 1.5;
-					itemCon[tData.bufItem[town] - 1] = 1;
 					break;
 
 				case MINE_I:
 					produce[i] *= 1.5;
-					itemCon[tData.bufItem[town] - 1] = 1;
 					break;
 
 				default:
 					break;
 				}
+				itemCon[1] = 1;
 			}
-
 			for (int j = 0; j < BUILDINGS; j++) {
 				if (built[j]) {
 					produce[i] += bData.income[town][j][i];
 				}
+			}
+			if (itemUse[2]) {
+				switch (town) {
+				case MINE_G:
+					if (built[0]) {
+						produce[i] += bData.income[town][0][i];
+					}
+					break;
+
+				case MINE_I:
+					if (built[0]) {
+						produce[i] += bData.income[town][0][i];
+					}
+					if (built[2]) {
+						produce[i] += bData.income[town][2][i];
+					}
+					break;
+
+				default:
+					break;
+				}
+				itemCon[2] = 1;
 			}
 		}
 		/*for (int i = 0; i < TRADE; i++) {
@@ -347,11 +406,36 @@ void STile::SetProduce() {
 			}
 		}
 
+		if (itemUse[1] && built[1]) {
+			switch (town) {
+			case MINE_G:
+				goods[12] += 2;
+				break;
+
+			case MINE_I:
+				goods[14] += 2;
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		if (itemUse[2] && built[2] && town == MINE_I) {
+			goods[16]++;
+		}
+
 		if (town == MINE_G && built[4]) {
 			goods[13] += goods[12] / 2 - 1;
+			if (itemUse[2]) {
+				goods[13]++;
+			}
 		}
 		if (town == MINE_I && built[4]) {
 			goods[15] += goods[14] / 2 - 1;
+			if (itemUse[2]) {
+				goods[15]++;
+			}
 		}
 
 
@@ -1098,7 +1182,9 @@ void CTileManager::CloseInfo(){
 					tile[infoNum].built[i] = false;
 				}
 			}
-			tile[infoNum].itemUse = false;
+			for (int i = 1; i <= ITEMS; i++) {
+				tile[infoNum].itemUse[i] = false;
+			}
 			/*for (int i = 0; i < RESOURCES; i++){
 				tile[infoNum].produce[i] = 0;
 			}
@@ -1222,16 +1308,16 @@ void CTileManager::CloseInfo(){
 			break;
 
 		case USE:
-			tile[infoNum].itemUse = true;
+			tile[infoNum].itemUse[tbox->iNum] = true;
 			UDData();
-			town.itemCon[tData.bufItem[tile[infoNum].town] - 1]++;
+			town.itemCon[tbox->iNum]++;
 			tbox->UpDate(town, tile[infoNum]);
 			break;
 
 		case END_USE:
-			tile[infoNum].itemUse = false;
+			tile[infoNum].itemUse[tbox->iNum] = false;
 			UDData();
-			town.itemCon[tData.bufItem[tile[infoNum].town] - 1]--;
+			town.itemCon[tbox->iNum]--;
 			tbox->UpDate(town, tile[infoNum]);
 			break;
 
@@ -1543,6 +1629,12 @@ void CTileManager::CheckAdjB() {
 
 void CTileManager::UDData() {
 	CheckAdjB();
+	town.forests = 0;
+	for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+		if (tile[i].terrain == FOREST && tile[i].town == WILD && tile[i].saNum == 0 && !tile[i].built[0] && !tile[i].built[1] && !tile[i].built[2]) {
+			town.forests++;
+		}
+	}
 	for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
 		tile[i].SetProduce();
 	}
@@ -1563,6 +1655,7 @@ void CTileManager::Draw(){
 	}
 
 	town.Set();
+	int cNum = 0;
 
 	for (int i = 0; i <= TOWNS; i++) {
 		town.tTypePop[i] = 0;
@@ -1602,7 +1695,12 @@ void CTileManager::Draw(){
 		if (tile[i].saNum == 6) {
 			town.foodCon += 10 * (1 + tile[i].saLv);
 			town.spFarm = true;
-			town.goodsPro[20] += 1 + tile[i].saLv;
+			town.goodsPro[21] += 1 + tile[i].saLv;
+		}
+
+		if (tile[i].saNum == 7) {
+			town.goodsPro[20] += min(1 + tile[i].saLv, town.forests);
+			cNum = tile[i].saLv + 1;
 		}
 
 		for (int j = 0; j < ITEMS; j++) {
@@ -1759,6 +1857,7 @@ void CTileManager::Draw(){
 	ETown u = WILD, d = WILD, l = WILD, r = WILD;
 
 	loaded = false;
+	int buf = 0;
 
 	switch (boxStatus){
 	case NO:
@@ -1886,6 +1985,22 @@ void CTileManager::Draw(){
 				}
 			}
 
+
+			if (cNum > 0) {
+				frs.assign(0, 0);
+				for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+					if (tile[i].terrain == FOREST && tile[i].town == WILD && tile[i].saNum == 0 && !tile[i].built[0] && !tile[i].built[1] && !tile[i].built[2]) {
+						frs.push_back(i);
+					}
+				}
+				while (cNum > 0 && !frs.empty()) {
+					buf = GetRand(frs.size() - 1);
+					tile[frs.operator[](buf)].terrain = PLAIN;
+					frs.erase(frs.begin() + buf);
+					cNum--;
+				}
+			}
+
 			town.resource[FOOD] = min(town.resource[FOOD], town.foodMax);
 			town.resource[FOOD] = max(town.resource[FOOD], 0);
 			UDData();
@@ -1992,11 +2107,13 @@ void CTileManager::WriteData(){
 		data->Set(i * 100 + 3, tile[i].saNum);
 		data->Set(i * 100 + 4, tile[i].hidMin);
 		data->Set(i * 100 + 5, tile[i].saLv);
-		if (tile[i].itemUse) {
-			data->Set(i * 100 + 6, 1);
-		}
-		else {
-			data->Set(i * 100 + 6, 0);
+		for (int j = 0; j < ITEMS; j++) {
+			if (tile[i].itemUse[j + 1]) {
+				data->Set(i * 100 + 6 + j, 1);
+			}
+			else {
+				data->Set(i * 100 + 6 + j, 0);
+			}
 		}
 		for (int j = 0; j < BUILDINGS + SP_BUILDS; j++) {
 			if (tile[i].built[j]) {
@@ -2041,11 +2158,13 @@ void CTileManager::ReadData(){
 		tile[i].saNum = data->GetInt(i * 100 + 3);
 		tile[i].hidMin = data->GetInt(i * 100 + 4);
 		tile[i].saLv = data->GetInt(i * 100 + 5);
-		if (data->GetInt(i * 100 + 6) == 0) {
-			tile[i].itemUse = false;
-		}
-		else {
-			tile[i].itemUse = true;
+		for (int j = 0; j < ITEMS; j++) {
+			if (data->GetInt(i * 100 + 6 + j) == 0) {
+				tile[i].itemUse[j + 1] = false;
+			}
+			else {
+				tile[i].itemUse[j + 1] = true;
+			}
 		}
 		for (int j = 0; j < BUILDINGS + SP_BUILDS; j++) {
 			if (data->GetInt(i * 100 + 10 + j) == 0) {
