@@ -30,7 +30,7 @@ const int LR_END = 1; //左右の端
 const int R_DIR = 6;
 const int MNR_TYPE = 3; //鉱産資源の種類
 const int ONLY = 2;
-const int SP_AREAS = 7;
+const int SP_AREAS = 8;
 
 enum ETerrain{
 	PLAIN, FOREST, HILL_S, HILL_G, HILL_I, RIVER
@@ -203,6 +203,7 @@ struct STown /*地域全体*/ {
 	bool spFarm;
 	bool onlyArea[SP_AREAS + 1];
 	int forests;
+	int tex;
 
 	void Set();
 };

@@ -277,7 +277,7 @@ void STile::SetProduce() {
 		for (int i = 0; i < GOODS; i++) {
 			goods[i] = 0;
 		}
-		for (int i = 0; i < ITEMS; i++) {
+		for (int i = 0; i <= ITEMS; i++) {
 			itemCon[i] = 0;
 		}
 
@@ -307,7 +307,7 @@ void STile::SetProduce() {
 		for (int i = 0; i < RESOURCES; i++) {
 			produce[i] = tData.income[town][0][i] + tData.income[town][1][i] * townLv;
 
-			for (int j = 0; j < ITEMS; j++) {
+			for (int j = 0; j <= ITEMS; j++) {
 				itemCon[j] = 0;
 			}
 
@@ -1310,14 +1310,14 @@ void CTileManager::CloseInfo(){
 		case USE:
 			tile[infoNum].itemUse[tbox->iNum] = true;
 			UDData();
-			town.itemCon[tbox->iNum]++;
+			town.itemCon[tbox->iNum - 1]++;
 			tbox->UpDate(town, tile[infoNum]);
 			break;
 
 		case END_USE:
 			tile[infoNum].itemUse[tbox->iNum] = false;
 			UDData();
-			town.itemCon[tbox->iNum]--;
+			town.itemCon[tbox->iNum - 1]--;
 			tbox->UpDate(town, tile[infoNum]);
 			break;
 
@@ -1704,7 +1704,7 @@ void CTileManager::Draw(){
 		}
 
 		for (int j = 0; j < ITEMS; j++) {
-			town.itemCon[j] += tile[i].itemCon[j];
+			town.itemCon[j] += tile[i].itemCon[j + 1];
 		}
 
 		if (tile[i].saNum != 0) {
@@ -1734,6 +1734,14 @@ void CTileManager::Draw(){
 		//g_goods.Draw(75, 250 + I_SIZE * i, i);
 	}
 
+	for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+		if (tile[i].saNum == 8) {
+			town.goodsPro[18] += min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]) * 2;
+			town.tex = min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]) * 2;
+			town.itemCon[1] += min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]);
+		}
+	}
+
 	town.goodsCon[2] = town.goodsPro[3] * 3;
 	town.goodsCon[7] = town.goodsPro[8];
 	town.goodsCon[8] = town.goodsPro[9] * 3;
@@ -1743,6 +1751,32 @@ void CTileManager::Draw(){
 	town.goodsCon[15] = town.goodsPro[16];
 	town.goodsCon[17] = town.goodsPro[18] * 2;
 	town.goodsCon[16] = town.itemCon[0];
+	town.goodsCon[20] += town.itemCon[1];
+
+	if (town.goodsCon[16] > town.goodsPro[16]) {
+		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+			if (tile[i].itemUse[1]) {
+				tile[i].itemUse[1] = false;
+				town.goodsCon[16]--;
+				town.itemCon[0]--;
+			}
+			if (town.goodsCon[16] == town.goodsPro[16]) {
+				break;
+			}
+		}
+	}
+	if (town.goodsCon[20] > town.goodsPro[20]) {
+		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+			if (tile[i].itemUse[2]) {
+				tile[i].itemUse[2] = false;
+				town.goodsCon[20]--;
+				town.itemCon[1]--;
+			}
+			if (town.goodsCon[20] == town.goodsPro[20]) {
+				break;
+			}
+		}
+	}
 
 	for (int i = 2; i < GOODS; i++) {
 		if (town.goodsPro[i] >= town.goodsCon[i]) {
