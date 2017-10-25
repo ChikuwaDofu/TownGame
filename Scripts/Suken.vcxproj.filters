@@ -115,6 +115,12 @@
     <ClCompile Include="InfoBox.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Title.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="HowTo.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SukenLib\GameEngine\Physics\Primitive\Circle.h">
@@ -193,6 +199,12 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="TileM.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Title.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="HowTo.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

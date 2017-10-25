@@ -17,6 +17,7 @@ int dx[4] = {0, 1, 0, -1}, dy[4] = {1, 0, -1, 0};
 //vector<int> v;
 vector<int> vec, res, frs;
 vector<P> stv;
+P none;
 
 CPicture CTileManager::g_tile;
 CPicture CTileManager::g_town;
@@ -35,6 +36,8 @@ CPicture CTileManager::g_tBut;
 CPicture CTileManager::g_bBut;
 CPicture CTileManager::g_sArea;
 CPicture CTileManager::g_starve;
+CPicture CTileManager::g_hBut;
+CPicture CTileManager::g_back;
 
 STownData::STownData(){
 	FILE* f;
@@ -228,8 +231,6 @@ SSpAreaData::SSpAreaData() {
 }
 
 STile::STile(){
-	x = x*GRID + WINDOW_WIDTH - WINDOW_HEIGHT;
-	y = y*GRID;
 	terrain = PLAIN;
 	//mineral = ROCK;
 	town = WILD;
@@ -258,6 +259,38 @@ STile::STile(){
 		trade[i] = 0;
 	}*/
 	for (int i = 0; i < GOODS; i++){
+		goods[i] = 0;
+	}
+	for (int i = 0; i < ITEMS; i++) {
+		itemCon[i] = 0;
+	}
+}
+
+void STile::Set() {
+	terrain = PLAIN;
+	//mineral = ROCK;
+	town = WILD;
+	townLv = 0;
+	devLim = 0;
+	saNum = 0;
+	saLv = 0;
+	hidMin = 0;
+	for (int i = 1; i <= ITEMS; i++) {
+		itemUse[i] = false;
+	}
+	for (int i = 0; i < BUILDINGS + SP_BUILDS; i++) {
+		built[i] = false;
+	}
+	for (int i = 0; i < RESOURCES; i++) {
+		buf[i] = 0;
+	}
+	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
+		connect[i] = false;
+	}
+	for (int i = 0; i < RESOURCES; i++) {
+		produce[i] = 0;
+	}
+	for (int i = 0; i < GOODS; i++) {
 		goods[i] = 0;
 	}
 	for (int i = 0; i < ITEMS; i++) {
@@ -929,12 +962,17 @@ void CTileManager::Set(){
 	n = GetRand(res.size() - 1);
 	tile[res.operator[](n)].hidMin = 2;
 
+	res.resize(0, 0);
+	vec.resize(0, 0);
+
 	openInfo = false;
 	boxStatus = NO;
 	infoNum = -1;
 	showTrade = false;
 	loaded = false;
 	turn = 1;
+	howTo = false;
+	back = false;
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS + 1, GRID, GRID, TOWNS + 1);
@@ -953,6 +991,8 @@ void CTileManager::Set(){
 	g_bBut.Load("Chikuwa3/BButton.png");
 	g_sArea.Load("Chikuwa3/SpArea.png", 1, SP_AREAS + 1, GRID, GRID, SP_AREAS + 1);
 	g_starve.Load("Chikuwa3/Starve.png");
+	g_hBut.Load("Chikuwa3/HButton.png");
+	g_back.Load("Chikuwa3/Back.png");
 }
 
 void CTileManager::OpenInfo(){
@@ -1934,16 +1974,16 @@ void CTileManager::Draw(){
 			/////
 		}
 
-		g_tBut.Draw(75, 520);
-		if (Event.LMouse.GetClick(74, 519, 183, 570)/* && !flag*/) {
+		g_tBut.Draw(75, 350);
+		if (Event.LMouse.GetClick(74, 349, 183, 400)/* && !flag*/) {
 			//showTrade = true;
 
 			gbox = new STradeBox(town);
 			boxStatus = T_DATA;
 		}
 
-		g_bBut.Draw(75, 430);
-		if (Event.LMouse.GetClick(74, 429, 175, 480)/* && !flag*/) {
+		g_bBut.Draw(75, 410);
+		if (Event.LMouse.GetClick(74, 409, 175, 460)/* && !flag*/) {
 			bbox = new SBuyBox(town);
 			boxStatus = BUY;
 		}
@@ -1961,7 +2001,7 @@ void CTileManager::Draw(){
 			town.resource[FOOD] -= town.foodCon;
 			turn++;
 			if (town.resource[FOOD] < 0) {
-				P none, box;
+				P box;
 				none.first = 0;
 				none.second = 0;
 				stv.assign(0, none);
@@ -2033,6 +2073,7 @@ void CTileManager::Draw(){
 					frs.erase(frs.begin() + buf);
 					cNum--;
 				}
+				frs.resize(0, 0);
 			}
 
 			town.resource[FOOD] = min(town.resource[FOOD], town.foodMax);
@@ -2111,6 +2152,23 @@ void CTileManager::Draw(){
 
 	default:
 		break;
+	}
+
+	g_hBut.Draw(75, 470);
+	if (Event.LMouse.GetClick(74, 469, 225, 520)) {
+		howTo = true;
+	}
+
+	g_back.Draw(75, 530);
+	if (Event.LMouse.GetClick(74, 529, 225, 580)) {
+		back = true;
+		town.Set();
+		for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+			tile[i].Set();
+		}
+		none.first = 0;
+		none.second = 0;
+		stv.resize(0, none);
 	}
 }
 
@@ -2213,4 +2271,9 @@ void CTileManager::ReadData(){
 		town.resource[i] = data->GetInt(10000 + i);
 	}
 	turn = data->GetInt(10000 + RESOURCES);
+}
+
+void CTileManager::Load() {
+	ReadData();
+	loaded = true;
 }

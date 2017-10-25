@@ -150,8 +150,6 @@ struct SSpAreaData {
 struct STile{
 	STile();
 
-	int x;
-	int y;
 	ETerrain terrain;
 	//EMineral mineral;
 	ETown town;
@@ -176,6 +174,7 @@ struct STile{
 	SPastureData pData;
 
 	void SetProduce();
+	void Set();
 };
 
 struct STown /*’nˆæ‘S‘Ì*/ {
@@ -388,6 +387,8 @@ private:
 	static CPicture g_sArea;
 	static CPicture g_starve;
 	static CPicture g_item;
+	static CPicture g_hBut;
+	static CPicture g_back;
 
 	STownData tData;
 	SBuildingData bData;
@@ -421,14 +422,18 @@ private:
 	//void CheckConnect(int n);
 	void DrawRiver(int n);
 	void CheckAdjB();
-	void WriteData();
 	void ReadData();
+	void WriteData();
 	void UDData();
 
 public:
+	bool howTo;
+	bool back;
+
 	CTileManager();
 	void Set();
 	void Draw();
 	void OpenInfo();
 	void CloseInfo();
+	void Load();
 };
