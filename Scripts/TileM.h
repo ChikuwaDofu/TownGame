@@ -2,6 +2,8 @@
 
 #include"Suken.h"
 #include"Picture.h"
+#include"Music.h"
+#include"Result.h"
 
 const int BLOCKS_X = 10;
 const int BLOCKS_Y = 10;
@@ -158,8 +160,6 @@ struct STile{
 	int produce[RESOURCES];
 	//int trade[TRADE];
 	int goods[GOODS];
-	bool fac[1];
-	bool connect[BLOCKS_X * BLOCKS_Y];
 	double buf[RESOURCES];
 	int devLim;
 	int saNum;
@@ -429,6 +429,8 @@ private:
 public:
 	bool howTo;
 	bool back;
+	bool end;
+	SEndData endD;
 
 	CTileManager();
 	void Set();

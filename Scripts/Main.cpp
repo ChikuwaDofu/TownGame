@@ -1,8 +1,10 @@
 #include"Suken.h"
 #include"MyScene.h"
+#include"Music.h"
 
 void suken::Awake(){
 	SetClass();
+	AwakeMusic();
 }
 
 void suken::GameLoopEnter(){
@@ -10,5 +12,5 @@ void suken::GameLoopEnter(){
 }
 
 void suken::GameLoopExit(){
-
+	music->Play();
 }

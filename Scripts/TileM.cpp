@@ -249,9 +249,6 @@ STile::STile(){
 		buf[i] = 0;
 	}
 	//fac[0] = false;
-	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++){
-		connect[i] = false;
-	}
 	for (int i = 0; i < RESOURCES; i++){
 		produce[i] = 0;
 	}
@@ -283,9 +280,6 @@ void STile::Set() {
 	}
 	for (int i = 0; i < RESOURCES; i++) {
 		buf[i] = 0;
-	}
-	for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
-		connect[i] = false;
 	}
 	for (int i = 0; i < RESOURCES; i++) {
 		produce[i] = 0;
@@ -973,6 +967,7 @@ void CTileManager::Set(){
 	turn = 1;
 	howTo = false;
 	back = false;
+	end = false;
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS + 1, GRID, GRID, TOWNS + 1);
@@ -1003,14 +998,6 @@ void CTileManager::OpenInfo(){
 		info = true;
 		infoNum = (Event.RMouse.GetX() + WINDOW_HEIGHT - WINDOW_WIDTH) / GRID + (Event.RMouse.GetY()) / GRID * BLOCKS_X;
 	}
-
-	/////
-
-	if (Event.RMouse.GetClick(WINDOW_WIDTH - WINDOW_HEIGHT - 1, -1, WINDOW_WIDTH, WINDOW_HEIGHT)){
-		tile[(Event.RMouse.GetX() + WINDOW_HEIGHT - WINDOW_WIDTH) / GRID + (Event.RMouse.GetY()) / GRID * BLOCKS_X].fac[0] = true;
-	}
-
-	/////
 
 	if (info){
 		openInfo = true;
@@ -1137,7 +1124,6 @@ void CTileManager::CloseInfo(){
 
 		case EST:
 			tile[infoNum].town = fbox->town;
-			tile[infoNum].fac[0] = true;
 			for (int i = 0; i < RESOURCES; i++){
 				//tile[infoNum].produce[i] = tData.income[fbox->town][NEW][i];
 				town.resource[i] -= tData.cost[fbox->town][NEW][i];
@@ -1145,6 +1131,7 @@ void CTileManager::CloseInfo(){
 			/*for (int i = 0; i < TRADE; i++){
 				tile[infoNum].trade[i] = tData.trade[fbox->town][NEW][i];
 			}*/
+			music->AddSound(sFound);
 			delete fbox;
 			boxStatus = NO;
 			break;
@@ -1287,6 +1274,7 @@ void CTileManager::CloseInfo(){
 			/*delete tbox;*/
 			UDData();
 			tbox->UpDate(town, tile[infoNum]);
+			music->AddSound(sDev);
 			break;
 			
 		case DG:
@@ -1315,6 +1303,7 @@ void CTileManager::CloseInfo(){
 			}*/
 			UDData();
 			tbox->UpDate(town, tile[infoNum]);
+			music->AddSound(sBuild);
 			break;
 
 		case DEMO:
@@ -2079,6 +2068,47 @@ void CTileManager::Draw(){
 			town.resource[FOOD] = min(town.resource[FOOD], town.foodMax);
 			town.resource[FOOD] = max(town.resource[FOOD], 0);
 			UDData();
+
+			if (turn > 100) {
+				end = true;
+				int ps[TOWNS] = {};
+				for (int i = 0; i < S_AREA; i++) {
+					endD.spA[i] = false;
+				}
+				for (int i = 0; i < BLOCKS_X * BLOCKS_Y; i++) {
+					if (tile[i].town != WILD) {
+						ps[tile[i].town - 1] = tile[i].townLv + 1;
+					}
+					else if (tile[i].saNum != 0) {
+						endD.spA[tile[i].saNum - 1] = true;
+						endD.spLv[tile[i].saNum - 1] = tile[i].saLv + 1;
+					}
+				}
+				for (int i = 0; i < TOWNS; i++) {
+					endD.townPop[i] = ps[i];
+				}
+				for (int i = 0; i < RESOURCES; i++) {
+					endD.resPro[i] = town.income[i];
+				}
+				endD.resPro[MONEY] += town.trade;
+				endD.resPro[FOOD] -= town.foodCon;
+				for (int i = 0; i < GOODS; i++) {
+					endD.goods[i] = town.goodsPro[i] - town.goodsCon[i];
+				}
+				endD.tIncome = town.trade;
+
+				town.Set();
+				for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
+					tile[i].Set();
+				}
+				none.first = 0;
+				none.second = 0;
+				stv.resize(0, none);
+				for (int i = 0; i < RESOURCES; i++) {
+					town.resource[i] = 100;
+				}
+				town.resource[FOOD] = 0;
+			}
 		}
 
 		if (Event.key.GetDown(Event.key.S)){
@@ -2134,6 +2164,7 @@ void CTileManager::Draw(){
 		if (bbox->bought) {
 			town.resource[MONEY] -= bbox->cost;
 			town.resource[bbox->rType] += bbox->amount;
+			music->AddSound(sBuy);
 		}
 
 		break;
@@ -2169,6 +2200,10 @@ void CTileManager::Draw(){
 		none.first = 0;
 		none.second = 0;
 		stv.resize(0, none);
+		for (int i = 0; i < RESOURCES; i++) {
+			town.resource[i] = 100;
+		}
+		town.resource[FOOD] = 0;
 	}
 }
 
