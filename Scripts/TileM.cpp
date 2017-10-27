@@ -38,6 +38,7 @@ CPicture CTileManager::g_sArea;
 CPicture CTileManager::g_starve;
 CPicture CTileManager::g_hBut;
 CPicture CTileManager::g_back;
+CPicture CTileManager::g_item;
 
 STownData::STownData(){
 	FILE* f;
@@ -470,11 +471,15 @@ void STile::SetProduce() {
 			buf[i] = 0;
 		}
 
-		if (adjRB[0] > 0) {
+		if (town == FARM && adjRB[0] > 0) {
 			if (built[2]) {
 				goods[3] += adjRB[0];
 			}
 			buf[FOOD] += 0.25 * adjRB[0];
+		}
+
+		if (town == COMM && adjRB[2] > 0) {
+			goods[1] += adjRB[2] * 2;
 		}
 
 		for (int i = 0; i < RESOURCES; i++) {
@@ -968,6 +973,7 @@ void CTileManager::Set(){
 	howTo = false;
 	back = false;
 	end = false;
+	bgm = sbNormal;
 
 	g_tile.Load("Chikuwa3/Tiles.png", TERRAINS, 1, GRID, GRID, TERRAINS);
 	g_town.Load("Chikuwa3/Towns.png", 1, TOWNS + 1, GRID, GRID, TOWNS + 1);
@@ -988,6 +994,7 @@ void CTileManager::Set(){
 	g_starve.Load("Chikuwa3/Starve.png");
 	g_hBut.Load("Chikuwa3/HButton.png");
 	g_back.Load("Chikuwa3/Back.png");
+	g_item.Load("Chikuwa3/Items.png", ITEMS, 1, G_SIZE, G_SIZE, ITEMS);
 }
 
 void CTileManager::OpenInfo(){
@@ -1081,6 +1088,7 @@ void CTileManager::OpenInfo(){
 				else {
 					sbox = new SSpABox(town, tile[infoNum]);
 					boxStatus = S_AREA;
+					SetBgm(tile[infoNum].saNum);
 				}
 			}
 			else {
@@ -1148,6 +1156,7 @@ void CTileManager::CloseInfo(){
 			}
 			UDData();
 			fbox->UpDate(tile[infoNum].terrain, town, false, pFlags[0], pFlags[1], pFlags[2], tile[infoNum].adjSer);
+			music->AddSound(sCut);
 			break;
 
 		case BLD_P:
@@ -1157,6 +1166,7 @@ void CTileManager::CloseInfo(){
 			}
 			delete fbox;
 			boxStatus = NO;
+			music->AddSound(sDev);
 			break;
 
 		case BLD_SA:
@@ -1166,6 +1176,8 @@ void CTileManager::CloseInfo(){
 			}
 			delete fbox;
 			boxStatus = NO;
+			music->AddSound(sSABuild);
+			SetBgm(tile[infoNum].saNum);
 			break;
 
 		case SEARCH:
@@ -1173,14 +1185,17 @@ void CTileManager::CloseInfo(){
 			switch (tile[infoNum].hidMin) {
 			case 1:
 				tile[infoNum].terrain = HILL_G;
+				music->AddSound(sSerSuc);
 				break;
 
 			case 2:
 				tile[infoNum].terrain = HILL_I;
+				music->AddSound(sSerSuc);
 				break;
 
 			default:
 				tile[infoNum].hidMin = 3;
+				music->AddSound(sSerFail);
 				break;
 			}
 			UDData();
@@ -1236,6 +1251,19 @@ void CTileManager::CloseInfo(){
 							if (!rFlag[0]) {
 								tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[0] = false;
 							}
+
+							if (tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[2]) {
+								for (int k = 0; k < 4; k++) {
+									if (infoNum%BLOCKS_X + dx[i] + dx[k] >= 0 && infoNum%BLOCKS_X + dx[i] + dx[k] < BLOCKS_X && infoNum / BLOCKS_X + dy[i] + dy[k] >= 0 && infoNum / BLOCKS_X + dy[i] + dy[k] < BLOCKS_Y) {
+										if (tile[infoNum + dx[i] + dx[k] + (dy[i] + dy[k]) * BLOCKS_X].town == COMM) {
+											rFlag[0] = true;
+										}
+									}
+								}
+							}
+							if (!rFlag[2]) {
+								tile[infoNum + dx[i] + dy[i] * BLOCKS_X].built[2] = false;
+							}
 						}
 						else {
 							for (int j = 0; j < 3; j++) {
@@ -1259,6 +1287,7 @@ void CTileManager::CloseInfo(){
 			}
 			delete tbox;
 			boxStatus = NO;
+			music->AddSound(sTDemo);
 			break;
 
 		case DEV:
@@ -1317,6 +1346,7 @@ void CTileManager::CloseInfo(){
 			}*/
 			UDData();
 			tbox->UpDate(town, tile[infoNum]);
+			music->AddSound(sBDemo);
 			break;
 
 		case SBUILD:
@@ -1334,6 +1364,7 @@ void CTileManager::CloseInfo(){
 			}*/
 			UDData();
 			tbox->UpDate(town, tile[infoNum]);
+			music->AddSound(sBuild);
 			break;
 
 		case USE:
@@ -1341,6 +1372,12 @@ void CTileManager::CloseInfo(){
 			UDData();
 			town.itemCon[tbox->iNum - 1]++;
 			tbox->UpDate(town, tile[infoNum]);
+			if (tbox->iNum == 1) {
+				music->AddSound(sTool);
+			}
+			else {
+				music->AddSound(sChar);
+			}
 			break;
 
 		case END_USE:
@@ -1348,6 +1385,7 @@ void CTileManager::CloseInfo(){
 			UDData();
 			town.itemCon[tbox->iNum - 1]--;
 			tbox->UpDate(town, tile[infoNum]);
+			music->AddSound(sEndUse);
 			break;
 
 		case SEARCH:
@@ -1358,6 +1396,7 @@ void CTileManager::CloseInfo(){
 				tile[infoNum].town = MINE_G;
 				tile[infoNum].built[0] = false;
 				tile[infoNum].built[2] = false;
+				music->AddSound(sSerSuc);
 				break;
 
 			case 2:
@@ -1365,10 +1404,12 @@ void CTileManager::CloseInfo(){
 				tile[infoNum].town = MINE_I;
 				tile[infoNum].built[0] = false;
 				tile[infoNum].built[2] = false;
+				music->AddSound(sSerSuc);
 				break;
 
 			default:
 				tile[infoNum].hidMin = 3;
+				music->AddSound(sSerFail);
 				break;
 			}
 			UDData();
@@ -1575,6 +1616,19 @@ void CTileManager::CheckAdjB() {
 			}
 		}
 
+		if (tile[i].town == COMM) {
+			for (int j = 0; j < 4; j++) {
+				if (i % BLOCKS_X + dx[j] >= 0 && i % BLOCKS_X + dx[j] < BLOCKS_X && i / BLOCKS_X + dy[j] >= 0 && i / BLOCKS_X + dy[j] < BLOCKS_Y) {
+					if (tile[i + dx[j] + dy[j] * BLOCKS_X].terrain == RIVER && tile[i + dx[j] + dy[j] * BLOCKS_X].built[2]) {
+						tile[i].adjRB[2]++;
+					}
+				}
+			}
+			if (tile[i].adjRB[2] > 2) {
+				tile[i].adjRB[2] = 2;
+			}
+		}
+
 		if ((tile[i].town == MINE_S || tile[i].town == MINE_G || tile[i].town == MINE_I) && tile[i].built[3]) {
 			for (int j = 0; j < 4; j++) {
 				if (i % BLOCKS_X + dx[j] >= 0 && i % BLOCKS_X + dx[j] < BLOCKS_X && i / BLOCKS_X + dy[j] >= 0 && i / BLOCKS_X + dy[j] < BLOCKS_Y) {
@@ -1765,8 +1819,8 @@ void CTileManager::Draw(){
 
 	for (int i = 0; i < BLOCKS_X*BLOCKS_Y; i++) {
 		if (tile[i].saNum == 8) {
-			town.goodsPro[18] += min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]) * 2;
-			town.tex = min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]) * 2;
+			town.goodsPro[18] += min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]) * 3;
+			town.tex = min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]) * 3;
 			town.itemCon[1] += min(1 + tile[i].saLv, town.goodsPro[20] - town.itemCon[1]);
 		}
 	}
@@ -1908,10 +1962,17 @@ void CTileManager::Draw(){
 		DrawFormatString(50 + I_SIZE + 5, 302, WHITE, "全体人口:%d", town.devSum);
 
 		DrawFormatString(50 + I_SIZE + 5, 302 + I_SIZE, WHITE, "都市数:%d/%d", town.towns, town.townMax);
+		
+	for (int i = 0; i < ITEMS; i++) {
+		g_item.Draw(50, 200 + G_SIZE * i, i);
+	}
+
+	DrawFormatString(50 + G_SIZE + 5, 212, WHITE, "%d", town.goodsPro[16] - town.goodsCon[16]);
+	DrawFormatString(50 + G_SIZE + 5, 252, WHITE, "%d", town.goodsPro[20] - town.goodsCon[20]);
 
 	//}
 
-	DrawString(50, 10, "Enterで収入を獲得", WHITE);
+	DrawString(50, 10, "Enterでターンを進める", WHITE);
 	DrawString(50, 30, "[s]でセーブ", WHITE);
 	DrawString(50, 50, "[l]でロード", WHITE);
 
@@ -2311,4 +2372,46 @@ void CTileManager::ReadData(){
 void CTileManager::Load() {
 	ReadData();
 	loaded = true;
+}
+
+void CTileManager::SetBgm(int n) {
+	music->StopLoop(bgm);
+	switch (n) {
+	case 1:
+		bgm = sbCastle;
+		break;
+		
+	case 2:
+		bgm = sbAgri;
+		break;
+
+	case 3:
+		bgm = sbWood;
+		break;
+		
+	case 4:
+		bgm = sbStone;
+		break;
+		
+	case 5:
+		bgm = sbComm;
+		break;
+
+	case 6:
+		bgm = sbPasture;
+		break;
+		
+	case 7:
+		bgm = sbChar;
+		break;
+
+	case 8:
+		bgm = sbFactory;
+		break;
+
+	default:
+		bgm = sbNormal;
+		break;
+	}
+	music->Loop(bgm);
 }

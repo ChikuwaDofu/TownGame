@@ -30,7 +30,7 @@
 
 using namespace suken;
 
-
+#define IDI_ICON1 101
 
 
 

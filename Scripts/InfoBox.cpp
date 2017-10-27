@@ -81,7 +81,7 @@ SFoundBox::SFoundBox(ETerrain type, STown town, bool cFlag, bool pas_s, bool pas
 }
 
 bool SFoundBox::CheckSpAAble(int n) {
-	int sum = 0;
+	/*int sum = 0;
 	for (int i = 1; i <= TOWNS; i++) {
 		if (saData.rPType[n][i]) {
 			sum += townInfo.tTypePop[i];
@@ -101,7 +101,7 @@ bool SFoundBox::CheckSpAAble(int n) {
 		break;
 
 	case 8:
-		if (townInfo.goodsPro[20] - townInfo.goodsCon[20] < 1 || townInfo.goodsPro[17] - townInfo.goodsCon[17] < 4) {
+		if (townInfo.goodsPro[20] - townInfo.goodsCon[20] < 1 || townInfo.goodsPro[17] - townInfo.goodsCon[17] < 6) {
 			return false;
 		}
 		break;
@@ -109,12 +109,12 @@ bool SFoundBox::CheckSpAAble(int n) {
 	default:
 		break;
 	}
-	if (sum >= saData.reqPop[n]) {
+	if (sum >= saData.reqPop[n]) {*/
 		return true;
-	}
+	/*}
 	else {
 		return false;
-	}
+	}*/
 }
 
 bool SFoundBox::CheckSAEnough(int type) {
@@ -438,17 +438,17 @@ void SFoundBox::DrawFB(int money/*, EMineral mineral*/) {
 	}
 	
 	if (search) {
-		g_search.Draw(450, 465);
-		DrawString(445, 522, "コスト", BLACK);
-		g_resource.Draw(505, 520, MONEY);
+		g_search.Draw(700, 465);
+		DrawString(695, 522, "コスト", BLACK);
+		g_resource.Draw(755, 520, MONEY);
 		if (money >= 80) {
-			DrawString(530, 522, "80", BLACK);
-			if (Event.LMouse.GetClick(449, 464, 550, 515) && !open) {
+			DrawString(780, 522, "80", BLACK);
+			if (Event.LMouse.GetClick(699, 464, 800, 515) && !open) {
 				mode = SEARCH;
 			}
 		}
 		else {
-			DrawString(530, 522, "80", RED);
+			DrawString(780, 522, "80", RED);
 		}
 	}
 
@@ -1267,6 +1267,10 @@ void STownBox::UpDate(STown town, STile tile) {
 	townInfo = town;
 	tileInfo = tile;
 	clickDemo = false;
+
+	if (tileInfo.town == MINE_S && tileInfo.built[3]) {
+		search = true;
+	}
 }
 
 /////
@@ -1453,23 +1457,23 @@ void SRiverBox::DrawRB(ETown u, ETown d, ETown l, ETown r) {
 	DrawIB();
 
 	if (u == FARM || d == FARM || l == FARM || r == FARM) {
-		PutRBButton(430, 65, 0, tileInfo.built[0]);
+		PutRBButton(470, 65, 0, tileInfo.built[0]);
 	}
-	if ((u != WILD && u != COMM) || (d != WILD && d != COMM) || (l != WILD && l != COMM) || (r != WILD && r != COMM)) {
+	/*if ((u != WILD && u != COMM) || (d != WILD && d != COMM) || (l != WILD && l != COMM) || (r != WILD && r != COMM)) {
 		PutRBButton(580, 65, 1, tileInfo.built[1]);
-	}
+	}*/
 	if (u == COMM || d == COMM || l == COMM || r == COMM) {
-		PutRBButton(730, 65, 2, tileInfo.built[2]);
+		PutRBButton(670, 65, 2, tileInfo.built[2]);
 	}
 
 	if (u == FARM || d == FARM || l == FARM || r == FARM) {
-		DrawDataBox(430, 65, 0);
+		DrawDataBox(470, 65, 0);
 	}
-	if ((u != WILD && u != COMM) || (d != WILD && d != COMM) || (l != WILD && l != COMM) || (r != WILD && r != COMM)) {
+	/*if ((u != WILD && u != COMM) || (d != WILD && d != COMM) || (l != WILD && l != COMM) || (r != WILD && r != COMM)) {
 		DrawDataBox(580, 65, 1);
-	}
+	}*/
 	if (u == COMM || d == COMM || l == COMM || r == COMM) {
-		DrawDataBox(730, 65, 2);
+		DrawDataBox(670, 65, 2);
 	}
 
 	open = false;
@@ -1512,7 +1516,7 @@ void STradeBox::DrawTB() {
 		DrawString(330, 120 + i * 120, "消費", RED);
 	}
 	for (int i = 2; i < GOODS; i++) {
-		if (i != 21 || townInfo.spFarm) {
+		if ((i != 21 || townInfo.spFarm) && i != 5 && i != 4) {
 			int show = i - 2;
 			g_goods.Draw(390 + show % 5 * 100, 30 + show / 5 * 120, i);
 			DrawFormatString(392 + show % 5 * 100, 75 + show / 5 * 120, ORANGE, "%.2lf", gData.value[i]);
@@ -1759,11 +1763,11 @@ void SSpABox::DrawSB() {
 			else {
 				DrawString(400, 425, "交易品目(道具)：木炭+1", RED);
 			}
-			if (townInfo.goodsPro[17] - townInfo.goodsCon[17] >= 2) {
-				DrawString(400, 445, "交易品目：羊毛+4", BLACK);
+			if (townInfo.goodsPro[17] - townInfo.goodsCon[17] >= 6) {
+				DrawString(400, 445, "交易品目：羊毛+6", BLACK);
 			}
 			else {
-				DrawString(400, 445, "交易品目：羊毛+4", RED);
+				DrawString(400, 445, "交易品目：羊毛+6", RED);
 			}
 
 			DrawString(610, 400, "コスト", BLACK);
@@ -1780,7 +1784,7 @@ void SSpABox::DrawSB() {
 
 			DrawString(700, 400, "効果", BLACK);
 			g_goods.Draw(700, 425, 18);
-			DrawString(700 + G_SIZE + 5, 436, "+2", BLACK);
+			DrawString(700 + G_SIZE + 5, 436, "+3", BLACK);
 			g_goods.Draw(700, 425 + G_SIZE, 20);
 			DrawString(700 + G_SIZE + 5, 425 + G_SIZE + 7, "-1", BLACK);
 		}
@@ -1793,4 +1797,9 @@ void SSpABox::UpDate(STown town, STile tile) {
 	I_UpDate();
 	townInfo = town;
 	tileInfo = tile;
+
+	if (tileInfo.saNum == 8) {
+		townInfo.goodsCon[17] += 6;
+		townInfo.goodsCon[20] += 1;
+	}
 }

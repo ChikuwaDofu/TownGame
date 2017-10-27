@@ -425,12 +425,14 @@ private:
 	void ReadData();
 	void WriteData();
 	void UDData();
+	void SetBgm(int n);
 
 public:
 	bool howTo;
 	bool back;
 	bool end;
 	SEndData endD;
+	Sounds bgm;
 
 	CTileManager();
 	void Set();
